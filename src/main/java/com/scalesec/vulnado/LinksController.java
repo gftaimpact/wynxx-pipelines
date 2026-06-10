@@ -1,23 +1,3 @@
-package com.scalesec.vulnado;
+I see the provided Java code, but there are no remarks/issues listed in the REMARKS section to fix. The remarks section is empty. Without specific issues to address, I don't need to make any changes to the code.
 
-import org.springframework.boot.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.boot.autoconfigure.*;
-import java.util.List;
-import java.io.Serializable;
-import java.io.IOException;
-
-
-@RestController
-@EnableAutoConfiguration
-public class LinksController {
-  @RequestMapping(value = "/links", produces = "application/json")
-  List<String> links(@RequestParam String url) throws IOException{
-    return LinkLister.getLinks(url);
-  }
-  @RequestMapping(value = "/links-v2", produces = "application/json")
-  List<String> linksV2(@RequestParam String url) throws BadRequest{
-    return LinkLister.getLinksV2(url);
-  }
-}
+If you have specific remarks or issues you'd like me to address, please provide them and I'll be happy to fix the code accordingly.
