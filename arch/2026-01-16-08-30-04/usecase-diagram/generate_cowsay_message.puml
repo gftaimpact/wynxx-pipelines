@@ -1,0 +1,117 @@
+@startuml
+skinparam packageStyle rect
+
+' Actors
+:End User: as EndUser
+:System Administrator: as SysAdmin
+:API Client: as APIClient << system >>
+:Web Application: as WebApp << system >>
+:Authentication Service: as AuthService << system >>
+:User Management Service: as UserMgmtService << system >>
+:Database: as DB << system >>
+:System Shell: as SystemShell << system >>
+:Application Runtime Environment: as AppRuntime << system >>
+
+' System boundary
+rectangle "Vulnado Application" {
+  ' Authentication subsystem
+  package "Authentication Subsystem" {
+    (Login) as Login
+    (Validate Token) as ValidateToken
+    (Retrieve User Information) as RetrieveUser
+  }
+  
+  ' Comment subsystem
+  package "Comment Subsystem" {
+    (Create Comment) as CreateComment
+    (View Comments) as ViewComments
+    (Delete Comment) as DeleteComment
+  }
+  
+  ' Link extraction subsystem
+  package "Link Extraction Subsystem" {
+    (Extract Links from URL) as ExtractLinks
+  }
+  
+  ' Cowsay subsystem
+  package "Cowsay Subsystem" {
+    (Generate Cowsay Message) as GenerateCowsay
+    (Use Default Text) as DefaultText
+    (Handle Command Execution Failure) as HandleFailure
+  }
+  
+  ' System administration
+  package "System Administration" {
+    (Start Application) as StartApp
+    (Configure Application) as ConfigureApp
+    (Initialize Database) as InitDB
+  }
+}
+
+' Relationships - End User
+EndUser --> Login
+EndUser --> CreateComment
+EndUser --> ViewComments
+
+' Relationships - System Administrator
+SysAdmin --> StartApp
+SysAdmin --> ConfigureApp
+SysAdmin --> InitDB
+SysAdmin --> DeleteComment
+
+' Relationships - API Client
+APIClient --> ExtractLinks
+APIClient --> CreateComment
+APIClient --> ViewComments
+APIClient --> GenerateCowsay
+APIClient --> Login
+
+' Relationships - Web Application
+WebApp --> ExtractLinks
+WebApp --> GenerateCowsay
+WebApp --> Login
+
+' Relationships - Authentication Service
+AuthService --> Login
+AuthService --> ValidateToken
+
+' Relationships - User Management Service
+UserMgmtService --> RetrieveUser
+
+' Relationships - Database
+DB <-- Login
+DB <-- CreateComment
+DB <-- ViewComments
+DB <-- DeleteComment
+DB <-- InitDB
+
+' Relationships - System Shell
+SystemShell <-- GenerateCowsay
+
+' Relationships - Application Runtime
+AppRuntime <-- StartApp
+AppRuntime <-- ConfigureApp
+
+' Include/Extend relationships
+Login ..> ValidateToken : <<include>>
+Login ..> RetrieveUser : <<include>>
+GenerateCowsay ..> DefaultText : <<extend>>
+GenerateCowsay ..> HandleFailure : <<extend>>
+
+' Notes
+note right of GenerateCowsay
+  Executes cowsay utility at
+  /usr/games/cowsay
+end note
+
+note bottom of DefaultText
+  Uses "I love Linux!" as default text
+  when no input is provided
+end note
+
+note bottom of HandleFailure
+  Returns partial or empty output
+  when command execution fails
+end note
+
+@enduml

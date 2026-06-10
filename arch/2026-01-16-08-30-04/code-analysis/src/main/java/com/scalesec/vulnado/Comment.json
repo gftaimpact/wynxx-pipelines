@@ -1,0 +1,364 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/Comment.java",
+    "className": "Comment",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Manages comment data including creation, retrieval, and deletion of comments in a database",
+    "interactions": [
+      "Interacts with Postgres database for CRUD operations",
+      "Throws exceptions for error handling"
+    ],
+    "businessKeywords": [
+      "comment",
+      "user",
+      "persistence",
+      "database"
+    ],
+    "technicalCategory": "Data Access Object",
+    "dataPatterns": [
+      "SQL queries",
+      "JDBC connection handling",
+      "UUID generation for IDs"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "java.sql",
+        "java.util.Date",
+        "java.util.List",
+        "java.util.ArrayList",
+        "java.util.UUID",
+        "com.scalesec.vulnado.Postgres"
+      ],
+      "consumers": [
+        "Unknown web controllers or services that use Comment class"
+      ],
+      "providers": [
+        "Postgres database connection"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Application component",
+      "resourceRequirements": [
+        "Database connection",
+        "JDBC driver"
+      ],
+      "scalingNeeds": "Database connection pooling may be required for scaling"
+    },
+    "security": {
+      "dataClassification": "User generated content",
+      "authenticationNeeds": "No explicit authentication in this class",
+      "authorizationPatterns": [
+        "No explicit authorization checks"
+      ]
+    },
+    "performance": {
+      "criticalOperations": [
+        "Database queries",
+        "Connection management"
+      ],
+      "dataVolume": "Multiple comments per user",
+      "concurrencyModel": "No explicit concurrency handling"
+    }
+  },
+  "classDetails": {
+    "name": "Comment",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [
+      {
+        "name": "id",
+        "type": "String",
+        "visibility": "public",
+        "isStatic": false,
+        "isFinal": false
+      },
+      {
+        "name": "username",
+        "type": "String",
+        "visibility": "public",
+        "isStatic": false,
+        "isFinal": false
+      },
+      {
+        "name": "body",
+        "type": "String",
+        "visibility": "public",
+        "isStatic": false,
+        "isFinal": false
+      },
+      {
+        "name": "created_on",
+        "type": "Timestamp",
+        "visibility": "public",
+        "isStatic": false,
+        "isFinal": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "Comment",
+        "returnType": "",
+        "visibility": "public",
+        "isStatic": false,
+        "isConstructor": true,
+        "parameters": [
+          {
+            "name": "id",
+            "type": "String"
+          },
+          {
+            "name": "username",
+            "type": "String"
+          },
+          {
+            "name": "body",
+            "type": "String"
+          },
+          {
+            "name": "created_on",
+            "type": "Timestamp"
+          }
+        ],
+        "exceptions": []
+      },
+      {
+        "name": "create",
+        "returnType": "Comment",
+        "visibility": "public",
+        "isStatic": true,
+        "isConstructor": false,
+        "parameters": [
+          {
+            "name": "username",
+            "type": "String"
+          },
+          {
+            "name": "body",
+            "type": "String"
+          }
+        ],
+        "exceptions": [
+          "BadRequest",
+          "ServerError"
+        ]
+      },
+      {
+        "name": "fetch_all",
+        "returnType": "List<Comment>",
+        "visibility": "public",
+        "isStatic": true,
+        "isConstructor": false,
+        "parameters": [],
+        "exceptions": []
+      },
+      {
+        "name": "delete",
+        "returnType": "Boolean",
+        "visibility": "public",
+        "isStatic": true,
+        "isConstructor": false,
+        "parameters": [
+          {
+            "name": "id",
+            "type": "String"
+          }
+        ],
+        "exceptions": []
+      },
+      {
+        "name": "commit",
+        "returnType": "Boolean",
+        "visibility": "private",
+        "isStatic": false,
+        "isConstructor": false,
+        "parameters": [],
+        "exceptions": [
+          "SQLException"
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "type": "uses",
+        "target": "Postgres",
+        "description": "Uses for database connection"
+      },
+      {
+        "type": "throws",
+        "target": "BadRequest",
+        "description": "Throws when unable to save comment"
+      },
+      {
+        "type": "throws",
+        "target": "ServerError",
+        "description": "Throws when exception occurs"
+      }
+    ],
+    "interfaces": [],
+    "superclass": ""
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "Create Comment",
+        "steps": [
+          "Client calls Comment.create(username, body)",
+          "Generate UUID for comment ID",
+          "Create timestamp for current time",
+          "Instantiate new Comment object",
+          "Call commit() to save to database",
+          "Return Comment object if successful",
+          "Throw BadRequest exception if commit fails",
+          "Throw ServerError if any other exception occurs"
+        ]
+      },
+      {
+        "name": "Fetch All Comments",
+        "steps": [
+          "Client calls Comment.fetch_all()",
+          "Get database connection from Postgres",
+          "Create SQL statement",
+          "Execute query to select all comments",
+          "Iterate through result set",
+          "Create Comment object for each row",
+          "Add Comment objects to list",
+          "Close database connection",
+          "Return list of comments",
+          "Print stack trace if exception occurs"
+        ]
+      },
+      {
+        "name": "Delete Comment",
+        "steps": [
+          "Client calls Comment.delete(id)",
+          "Get database connection from Postgres",
+          "Prepare SQL statement with parameter",
+          "Set ID parameter in prepared statement",
+          "Execute update and check if one row was affected",
+          "Return true if successful, false otherwise",
+          "Print stack trace if exception occurs",
+          "Always return false in finally block (logic error)"
+        ]
+      },
+      {
+        "name": "Commit Comment",
+        "steps": [
+          "Get database connection from Postgres",
+          "Prepare SQL insert statement with parameters",
+          "Set all parameters (id, username, body, created_on)",
+          "Execute update and check if one row was affected",
+          "Return true if successful, false otherwise"
+        ]
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      {
+        "name": "Application User",
+        "description": "User who creates and views comments"
+      },
+      {
+        "name": "System Administrator",
+        "description": "User who may delete comments"
+      },
+      {
+        "name": "Database",
+        "description": "Stores and retrieves comment data"
+      }
+    ],
+    "mainScenarios": [
+      {
+        "name": "Create New Comment",
+        "actor": "Application User",
+        "preconditions": [
+          "User has valid username",
+          "Database connection is available"
+        ],
+        "steps": [
+          "User provides username and comment body",
+          "System generates unique ID and timestamp",
+          "System stores comment in database",
+          "System returns created comment"
+        ],
+        "postconditions": [
+          "New comment is stored in database",
+          "Comment is available for retrieval"
+        ],
+        "alternativeFlows": [
+          {
+            "condition": "Database error occurs",
+            "steps": [
+              "System throws ServerError exception",
+              "Comment is not created"
+            ]
+          },
+          {
+            "condition": "Comment cannot be saved",
+            "steps": [
+              "System throws BadRequest exception",
+              "Comment is not created"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "View All Comments",
+        "actor": "Application User",
+        "preconditions": [
+          "Database connection is available"
+        ],
+        "steps": [
+          "User requests to view all comments",
+          "System retrieves all comments from database",
+          "System returns list of comments"
+        ],
+        "postconditions": [
+          "All comments are retrieved and available for display"
+        ],
+        "alternativeFlows": [
+          {
+            "condition": "Database error occurs",
+            "steps": [
+              "System prints error to console",
+              "System returns empty list"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Delete Comment",
+        "actor": "System Administrator",
+        "preconditions": [
+          "Comment exists in database",
+          "Database connection is available"
+        ],
+        "steps": [
+          "Admin provides comment ID to delete",
+          "System removes comment from database",
+          "System confirms deletion"
+        ],
+        "postconditions": [
+          "Comment is removed from database"
+        ],
+        "alternativeFlows": [
+          {
+            "condition": "Database error occurs",
+            "steps": [
+              "System prints error to console",
+              "System returns false indicating failure"
+            ]
+          },
+          {
+            "condition": "Comment ID does not exist",
+            "steps": [
+              "No rows are affected by delete operation",
+              "System returns false indicating failure"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

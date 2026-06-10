@@ -1,0 +1,83 @@
+@startuml
+skinparam packageStyle rect
+
+' Actors
+:End User: as EndUser
+:System Administrator: as SysAdmin
+:API Client: as APIClient << system >>
+:Web Application: as WebApp << system >>
+:Authentication Service: as AuthService << system >>
+:User Management Service: as UserMgmtService << system >>
+:Database: as DB << system >>
+:System Shell: as SystemShell << system >>
+:Application Runtime Environment: as AppRuntime << system >>
+
+' System boundary
+package "Vulnado Application" {
+  ' Authentication subsystem
+  package "Authentication Subsystem" {
+    usecase "Login" as UC1
+    usecase "Validate Token" as UC2
+    usecase "User Retrieval" as UC6
+    
+    note right of UC6
+      Retrieves user data from database
+      Returns null if user not found
+      or if database error occurs
+    end note
+  }
+  
+  ' Comment management subsystem
+  package "Comment Management Subsystem" {
+    usecase "Create Comment" as UC3
+    usecase "View Comments" as UC4
+    usecase "Delete Comment" as UC5
+  }
+  
+  ' Link extraction subsystem
+  package "Link Extraction Subsystem" {
+    usecase "Extract Links from URL" as UC7
+  }
+  
+  ' Cowsay subsystem
+  package "Cowsay Subsystem" {
+    usecase "Generate Cowsay Message" as UC8
+  }
+  
+  ' System management subsystem
+  package "System Management Subsystem" {
+    usecase "Initialize Database" as UC9
+    usecase "Configure Application" as UC10
+  }
+}
+
+' Actor relationships with use cases
+EndUser --> UC1
+EndUser --> UC3
+EndUser --> UC4
+SysAdmin --> UC5
+SysAdmin --> UC9
+SysAdmin --> UC10
+APIClient --> UC3
+APIClient --> UC7
+WebApp --> UC7
+WebApp --> UC8
+AuthService --> UC1
+AuthService --> UC2
+UserMgmtService --> UC6
+DB --> UC6
+DB --> UC3
+DB --> UC4
+DB --> UC5
+SystemShell --> UC8
+AppRuntime --> UC10
+
+' Use case relationships
+UC1 ..> UC6 : <<include>>
+UC3 ..> UC2 : <<include>>
+UC4 ..> UC2 : <<include>>
+UC5 ..> UC2 : <<include>>
+UC7 ..> UC2 : <<include>>
+UC8 ..> UC2 : <<include>>
+
+@enduml

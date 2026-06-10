@@ -1,0 +1,19 @@
+@startuml
+actor Client
+participant CommentsController
+participant Comment
+
+Client -> CommentsController: DELETE request to /comments/{id} with x-auth-token header
+note right of Client: Client requests comment deletion
+activate CommentsController
+
+CommentsController -> Comment: delete(id)
+note right of CommentsController: Delete comment from database
+activate Comment
+Comment --> CommentsController: Return boolean result
+deactivate Comment
+
+CommentsController --> Client: Return boolean result as JSON response
+note right of CommentsController: Send deletion result to client
+deactivate CommentsController
+@enduml

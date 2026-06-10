@@ -1,0 +1,206 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/Cowsay.java",
+    "className": "Cowsay",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Execute the cowsay command-line utility with user input and return the formatted output",
+    "interactions": [
+      "Executes external system command (cowsay)",
+      "Processes command output streams"
+    ],
+    "businessKeywords": [
+      "text formatting",
+      "command execution",
+      "user input processing"
+    ],
+    "technicalCategory": "Command Execution Utility",
+    "dataPatterns": [
+      "String input processing",
+      "Process output capture"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "java.io.BufferedReader",
+        "java.io.InputStreamReader",
+        "External cowsay command-line tool"
+      ],
+      "consumers": [
+        "Unknown client components that call Cowsay.run()"
+      ],
+      "providers": [
+        "System shell (bash)",
+        "/usr/games/cowsay executable"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Server-side component",
+      "resourceRequirements": [
+        "Access to shell execution",
+        "Installed cowsay utility at /usr/games/cowsay"
+      ],
+      "scalingNeeds": "Low resource requirements, primarily I/O bound"
+    },
+    "security": {
+      "dataClassification": "Potentially sensitive due to command injection vulnerability",
+      "authenticationNeeds": "None explicitly defined",
+      "authorizationPatterns": [
+        "No input validation or sanitization",
+        "Direct command injection vulnerability present"
+      ]
+    },
+    "performance": {
+      "criticalOperations": [
+        "External process execution",
+        "Stream reading"
+      ],
+      "dataVolume": "Small text processing",
+      "concurrencyModel": "Synchronous execution"
+    }
+  },
+  "classDetails": {
+    "name": "Cowsay",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [],
+    "methods": [
+      {
+        "name": "run",
+        "visibility": "public",
+        "static": true,
+        "returnType": "String",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "String"
+          }
+        ],
+        "exceptions": [],
+        "description": "Executes the cowsay command with the provided input and returns the formatted output"
+      }
+    ],
+    "relationships": [],
+    "interfaces": [],
+    "superclass": ""
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "run method execution",
+        "steps": [
+          {
+            "action": "Create ProcessBuilder instance",
+            "actor": "Cowsay.run",
+            "target": "ProcessBuilder"
+          },
+          {
+            "action": "Construct command string with user input",
+            "actor": "Cowsay.run",
+            "target": "String concatenation"
+          },
+          {
+            "action": "Print command to standard output",
+            "actor": "Cowsay.run",
+            "target": "System.out"
+          },
+          {
+            "action": "Set command for ProcessBuilder",
+            "actor": "Cowsay.run",
+            "target": "ProcessBuilder.command"
+          },
+          {
+            "action": "Create StringBuilder for output",
+            "actor": "Cowsay.run",
+            "target": "StringBuilder"
+          },
+          {
+            "action": "Start process execution",
+            "actor": "Cowsay.run",
+            "target": "ProcessBuilder.start"
+          },
+          {
+            "action": "Create BufferedReader for process output",
+            "actor": "Cowsay.run",
+            "target": "BufferedReader"
+          },
+          {
+            "action": "Read process output line by line",
+            "actor": "Cowsay.run",
+            "target": "BufferedReader.readLine"
+          },
+          {
+            "action": "Append each line to StringBuilder",
+            "actor": "Cowsay.run",
+            "target": "StringBuilder.append"
+          },
+          {
+            "action": "Handle exceptions with printStackTrace",
+            "actor": "Cowsay.run",
+            "target": "Exception.printStackTrace"
+          },
+          {
+            "action": "Return collected output as string",
+            "actor": "Cowsay.run",
+            "target": "StringBuilder.toString"
+          }
+        ],
+        "exceptionPaths": [
+          {
+            "exception": "Any Exception",
+            "handling": "Print stack trace and return accumulated output"
+          }
+        ]
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      {
+        "name": "Client Code",
+        "description": "Any component that calls the Cowsay.run method"
+      },
+      {
+        "name": "System Shell",
+        "description": "Executes the cowsay command"
+      }
+    ],
+    "mainScenarios": [
+      {
+        "name": "Format text using cowsay",
+        "description": "Execute cowsay command to format input text",
+        "steps": [
+          "Client provides input string to Cowsay.run method",
+          "Method constructs shell command with input",
+          "Command is executed via ProcessBuilder",
+          "Output from cowsay is captured line by line",
+          "Formatted output is returned as a string"
+        ],
+        "preconditions": [
+          "Cowsay utility must be installed at /usr/games/cowsay",
+          "System must allow shell command execution"
+        ],
+        "postconditions": [
+          "Formatted text is returned to caller"
+        ],
+        "alternativeFlows": [
+          {
+            "name": "Command execution failure",
+            "steps": [
+              "Exception occurs during process execution",
+              "Stack trace is printed",
+              "Partial or empty output is returned"
+            ]
+          }
+        ],
+        "securityIssues": [
+          {
+            "name": "Command Injection Vulnerability",
+            "description": "User input is directly concatenated into shell command without sanitization",
+            "severity": "Critical",
+            "mitigation": "Input should be properly validated and sanitized before being used in command construction"
+          }
+        ]
+      }
+    ]
+  }
+}

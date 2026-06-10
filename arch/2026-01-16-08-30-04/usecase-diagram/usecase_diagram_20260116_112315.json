@@ -1,0 +1,911 @@
+{
+  "system": {
+    "name": "Vulnado Application",
+    "description": "A web application with various features including user authentication, comment management, link extraction, and cowsay functionality"
+  },
+  "actors": [
+    {
+      "id": "end_user",
+      "name": "End User",
+      "type": "human",
+      "description": "Person who interacts with the application",
+      "responsibilities": [
+        "Authenticate to the system",
+        "Create and view comments"
+      ]
+    },
+    {
+      "id": "system_admin",
+      "name": "System Administrator",
+      "type": "human",
+      "description": "Person who manages the application",
+      "responsibilities": [
+        "Start and configure the application",
+        "Delete comments",
+        "Initialize database"
+      ]
+    },
+    {
+      "id": "api_client",
+      "name": "API Client",
+      "type": "system",
+      "description": "External system that consumes the application's APIs",
+      "responsibilities": [
+        "Extract links from URLs",
+        "Create and manage comments"
+      ]
+    },
+    {
+      "id": "web_application",
+      "name": "Web Application",
+      "type": "system",
+      "description": "Frontend application that uses the backend services",
+      "responsibilities": [
+        "Extract links from web pages",
+        "Display cowsay messages"
+      ]
+    },
+    {
+      "id": "auth_service",
+      "name": "Authentication Service",
+      "type": "system",
+      "description": "Service that handles user authentication",
+      "responsibilities": [
+        "Authenticate users",
+        "Validate tokens"
+      ]
+    },
+    {
+      "id": "user_mgmt_service",
+      "name": "User Management Service",
+      "type": "system",
+      "description": "Service that manages user data",
+      "responsibilities": [
+        "Retrieve user information"
+      ]
+    },
+    {
+      "id": "database",
+      "name": "Database",
+      "type": "system",
+      "description": "Stores application data",
+      "responsibilities": [
+        "Store user credentials",
+        "Store comments"
+      ]
+    },
+    {
+      "id": "system_shell",
+      "name": "System Shell",
+      "type": "system",
+      "description": "Executes shell commands",
+      "responsibilities": [
+        "Execute cowsay command"
+      ]
+    },
+    {
+      "id": "app_runtime",
+      "name": "Application Runtime Environment",
+      "type": "system",
+      "description": "Environment where the application runs",
+      "responsibilities": [
+        "Provide runtime context for the application"
+      ]
+    }
+  ],
+  "useCases": [
+    {
+      "id": "UC1",
+      "name": "Extract Links from Web Page",
+      "boundary": "Link Processing Subsystem",
+      "description": "Extract hyperlinks from a provided web page URL",
+      "actors": [
+        "web_application"
+      ],
+      "preconditions": [
+        "Valid URL is provided",
+        "Network connectivity is available"
+      ],
+      "postconditions": [
+        "Application receives complete list of hyperlinks from the page"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "Application calls LinkLister.getLinks with target URL",
+          "actor": "web_application"
+        },
+        {
+          "step": 2,
+          "description": "System connects to URL and retrieves HTML content",
+          "actor": "system"
+        },
+        {
+          "step": 3,
+          "description": "System parses HTML and extracts all hyperlinks",
+          "actor": "system"
+        },
+        {
+          "step": 4,
+          "description": "System returns list of absolute URLs to application",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC1-ALT1",
+          "condition": "URL is invalid or unreachable",
+          "steps": [
+            {
+              "step": 1,
+              "description": "IOException is thrown",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    },
+    {
+      "id": "UC2",
+      "name": "Extract Links with Security Validation",
+      "boundary": "Link Processing Subsystem",
+      "description": "Extract hyperlinks from a provided web page URL with security validation",
+      "actors": [
+        "api_client"
+      ],
+      "preconditions": [
+        "Valid URL is provided",
+        "Network connectivity is available"
+      ],
+      "postconditions": [
+        "Consumer receives list of hyperlinks from public web pages only"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "Consumer calls LinkLister.getLinksV2 with target URL",
+          "actor": "api_client"
+        },
+        {
+          "step": 2,
+          "description": "System validates URL is not pointing to private IP address",
+          "actor": "system"
+        },
+        {
+          "step": 3,
+          "description": "System connects to URL and retrieves HTML content",
+          "actor": "system"
+        },
+        {
+          "step": 4,
+          "description": "System parses HTML and extracts all hyperlinks",
+          "actor": "system"
+        },
+        {
+          "step": 5,
+          "description": "System returns list of absolute URLs to consumer",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC2-ALT1",
+          "condition": "URL points to private IP (172.*, 192.168.*, 10.*)",
+          "steps": [
+            {
+              "step": 1,
+              "description": "BadRequest exception is thrown",
+              "actor": "system"
+            }
+          ]
+        },
+        {
+          "id": "UC2-ALT2",
+          "condition": "Any other exception occurs during processing",
+          "steps": [
+            {
+              "step": 1,
+              "description": "Exception is wrapped in BadRequest exception",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": [
+        "URLs pointing to private IP addresses are not allowed"
+      ]
+    },
+    {
+      "id": "UC3",
+      "name": "Generate Cowsay Message",
+      "boundary": "Cowsay Subsystem",
+      "description": "Generate ASCII art using the cowsay utility",
+      "actors": [
+        "web_application",
+        "api_client"
+      ],
+      "preconditions": [
+        "Web service is running",
+        "Cowsay utility is installed at /usr/games/cowsay"
+      ],
+      "postconditions": [
+        "Client receives cowsay ASCII art"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "Client sends GET request to /cowsay endpoint",
+          "actor": "web_application"
+        },
+        {
+          "step": 2,
+          "description": "Client optionally provides 'input' parameter",
+          "actor": "web_application"
+        },
+        {
+          "step": 3,
+          "description": "System constructs shell command with input",
+          "actor": "system"
+        },
+        {
+          "step": 4,
+          "description": "Command is executed via ProcessBuilder",
+          "actor": "system_shell"
+        },
+        {
+          "step": 5,
+          "description": "Output from cowsay is captured line by line",
+          "actor": "system"
+        },
+        {
+          "step": 6,
+          "description": "System returns the generated ASCII art to client",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC3-ALT1",
+          "condition": "No input is provided",
+          "steps": [
+            {
+              "step": 1,
+              "description": "System uses default text 'I love Linux!'",
+              "actor": "system"
+            }
+          ]
+        },
+        {
+          "id": "UC3-ALT2",
+          "condition": "Command execution failure",
+          "steps": [
+            {
+              "step": 1,
+              "description": "Exception occurs during process execution",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "Stack trace is printed",
+              "actor": "system"
+            },
+            {
+              "step": 3,
+              "description": "Partial or empty output is returned",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    },
+    {
+      "id": "UC4",
+      "name": "User Authentication",
+      "boundary": "Authentication Subsystem",
+      "description": "Authenticate a user with username and password",
+      "actors": [
+        "end_user",
+        "auth_service"
+      ],
+      "preconditions": [
+        "User exists in the database"
+      ],
+      "postconditions": [
+        "User authenticated and token provided"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "Client submits username and password to /login endpoint",
+          "actor": "end_user"
+        },
+        {
+          "step": 2,
+          "description": "System fetches user record by username",
+          "actor": "auth_service"
+        },
+        {
+          "step": 3,
+          "description": "System hashes provided password and compares with stored hash",
+          "actor": "auth_service"
+        },
+        {
+          "step": 4,
+          "description": "System generates authentication token",
+          "actor": "auth_service"
+        },
+        {
+          "step": 5,
+          "description": "System returns token to client",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC4-ALT1",
+          "condition": "User not found in database",
+          "steps": [
+            {
+              "step": 1,
+              "description": "Client receives 401 Unauthorized response",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "No authentication token is issued",
+              "actor": "system"
+            }
+          ]
+        },
+        {
+          "id": "UC4-ALT2",
+          "condition": "Password does not match",
+          "steps": [
+            {
+              "step": 1,
+              "description": "Client receives 401 Unauthorized response",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "No authentication token is issued",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": [
+        "Passwords must be stored as MD5 hashes",
+        "Authentication tokens are generated using a secret key",
+        "Error message should not reveal whether username or password was incorrect"
+      ]
+    },
+    {
+      "id": "UC5",
+      "name": "Token Validation",
+      "boundary": "Authentication Subsystem",
+      "description": "Validate a JWT token for authentication",
+      "actors": [
+        "auth_service"
+      ],
+      "preconditions": [
+        "Token has been previously issued"
+      ],
+      "postconditions": [
+        "Token validated successfully"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "Call assertAuth() with secret and token",
+          "actor": "auth_service"
+        },
+        {
+          "step": 2,
+          "description": "Token is validated against the secret",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC5-ALT1",
+          "condition": "Token is invalid or expired",
+          "steps": [
+            {
+              "step": 1,
+              "description": "Unauthorized exception thrown",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    },
+    {
+      "id": "UC6",
+      "name": "User Retrieval",
+      "boundary": "Authentication Subsystem",
+      "description": "Retrieve user data from database",
+      "actors": [
+        "user_mgmt_service",
+        "database"
+      ],
+      "preconditions": [
+        "Database connection available"
+      ],
+      "postconditions": [
+        "User data retrieved and returned as User object"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "Call fetch() with username",
+          "actor": "user_mgmt_service"
+        },
+        {
+          "step": 2,
+          "description": "SQL query executed to find user",
+          "actor": "database"
+        },
+        {
+          "step": 3,
+          "description": "User object created from query results",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC6-ALT1",
+          "condition": "User not found",
+          "steps": [
+            {
+              "step": 1,
+              "description": "null returned",
+              "actor": "system"
+            }
+          ]
+        },
+        {
+          "id": "UC6-ALT2",
+          "condition": "Database error occurs",
+          "steps": [
+            {
+              "step": 1,
+              "description": "Exception printed",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "null still returned",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    },
+    {
+      "id": "UC7",
+      "name": "Create New Comment",
+      "boundary": "Comment Management Subsystem",
+      "description": "Create a new comment in the system",
+      "actors": [
+        "end_user",
+        "api_client",
+        "database"
+      ],
+      "preconditions": [
+        "User has valid username",
+        "Database connection is available"
+      ],
+      "postconditions": [
+        "New comment is stored in database",
+        "Comment is available for retrieval"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "Client sends POST request to /comments endpoint with comment data and auth token",
+          "actor": "api_client"
+        },
+        {
+          "step": 2,
+          "description": "User provides username and comment body",
+          "actor": "end_user"
+        },
+        {
+          "step": 3,
+          "description": "System generates unique ID and timestamp",
+          "actor": "system"
+        },
+        {
+          "step": 4,
+          "description": "System stores comment in database",
+          "actor": "database"
+        },
+        {
+          "step": 5,
+          "description": "System returns created comment",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC7-ALT1",
+          "condition": "Database error occurs",
+          "steps": [
+            {
+              "step": 1,
+              "description": "System throws ServerError exception",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "Comment is not created",
+              "actor": "system"
+            }
+          ]
+        },
+        {
+          "id": "UC7-ALT2",
+          "condition": "Comment cannot be saved",
+          "steps": [
+            {
+              "step": 1,
+              "description": "System throws BadRequest exception",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "Comment is not created",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    },
+    {
+      "id": "UC8",
+      "name": "View All Comments",
+      "boundary": "Comment Management Subsystem",
+      "description": "Retrieve and display all comments",
+      "actors": [
+        "end_user",
+        "database"
+      ],
+      "preconditions": [
+        "Database connection is available",
+        "User has valid authentication token"
+      ],
+      "postconditions": [
+        "All comments are retrieved and available for display"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "User sends GET request to /comments endpoint with auth token",
+          "actor": "end_user"
+        },
+        {
+          "step": 2,
+          "description": "System validates the token",
+          "actor": "system"
+        },
+        {
+          "step": 3,
+          "description": "System retrieves all comments from database",
+          "actor": "database"
+        },
+        {
+          "step": 4,
+          "description": "System returns comments as JSON",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC8-ALT1",
+          "condition": "Database error occurs",
+          "steps": [
+            {
+              "step": 1,
+              "description": "System prints error to console",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "System returns empty list",
+              "actor": "system"
+            }
+          ]
+        },
+        {
+          "id": "UC8-ALT2",
+          "condition": "Invalid authentication token",
+          "steps": [
+            {
+              "step": 1,
+              "description": "System returns authentication error",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    },
+    {
+      "id": "UC9",
+      "name": "Delete Comment",
+      "boundary": "Comment Management Subsystem",
+      "description": "Remove a comment from the system",
+      "actors": [
+        "system_admin",
+        "database"
+      ],
+      "preconditions": [
+        "Comment exists in database",
+        "Database connection is available",
+        "User has valid authentication token"
+      ],
+      "postconditions": [
+        "Comment is removed from database"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "User sends DELETE request to /comments/{id} endpoint with auth token",
+          "actor": "system_admin"
+        },
+        {
+          "step": 2,
+          "description": "System validates the token",
+          "actor": "system"
+        },
+        {
+          "step": 3,
+          "description": "Admin provides comment ID to delete",
+          "actor": "system_admin"
+        },
+        {
+          "step": 4,
+          "description": "System removes comment from database",
+          "actor": "database"
+        },
+        {
+          "step": 5,
+          "description": "System confirms deletion",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC9-ALT1",
+          "condition": "Database error occurs",
+          "steps": [
+            {
+              "step": 1,
+              "description": "System prints error to console",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "System returns false indicating failure",
+              "actor": "system"
+            }
+          ]
+        },
+        {
+          "id": "UC9-ALT2",
+          "condition": "Comment ID does not exist",
+          "steps": [
+            {
+              "step": 1,
+              "description": "No rows are affected by delete operation",
+              "actor": "database"
+            },
+            {
+              "step": 2,
+              "description": "System returns false indicating failure",
+              "actor": "system"
+            }
+          ]
+        },
+        {
+          "id": "UC9-ALT3",
+          "condition": "Invalid authentication token",
+          "steps": [
+            {
+              "step": 1,
+              "description": "System returns authentication error",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    },
+    {
+      "id": "UC10",
+      "name": "Initialize Database",
+      "boundary": "Database Management Subsystem",
+      "description": "Set up the database schema and seed data",
+      "actors": [
+        "system_admin",
+        "database"
+      ],
+      "preconditions": [
+        "PostgreSQL database is available",
+        "Environment variables are set (PGHOST, PGDATABASE, PGUSER, PGPASSWORD)"
+      ],
+      "postconditions": [
+        "Database is initialized with schema",
+        "Seed data is available for testing"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "Call Postgres.setup() method",
+          "actor": "system_admin"
+        },
+        {
+          "step": 2,
+          "description": "Create database tables if they don't exist",
+          "actor": "database"
+        },
+        {
+          "step": 3,
+          "description": "Clear existing data",
+          "actor": "database"
+        },
+        {
+          "step": 4,
+          "description": "Insert seed users and comments",
+          "actor": "database"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC10-ALT1",
+          "condition": "Database connection fails",
+          "steps": [
+            {
+              "step": 1,
+              "description": "Print error message",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "Exit application with error code",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    },
+    {
+      "id": "UC11",
+      "name": "Application Startup",
+      "boundary": "Database Management Subsystem",
+      "description": "Start the Vulnado application",
+      "actors": [
+        "system_admin",
+        "app_runtime"
+      ],
+      "preconditions": [
+        "JVM is available",
+        "Database is accessible"
+      ],
+      "postconditions": [
+        "Application is running and ready to serve requests"
+      ],
+      "mainFlow": [
+        {
+          "step": 1,
+          "description": "System Administrator starts the application",
+          "actor": "system_admin"
+        },
+        {
+          "step": 2,
+          "description": "Application initializes database connection",
+          "actor": "system"
+        },
+        {
+          "step": 3,
+          "description": "Spring Boot application context is created",
+          "actor": "app_runtime"
+        },
+        {
+          "step": 4,
+          "description": "Application becomes ready to handle requests",
+          "actor": "system"
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "id": "UC11-ALT1",
+          "condition": "Database is not accessible",
+          "steps": [
+            {
+              "step": 1,
+              "description": "Application startup fails",
+              "actor": "system"
+            },
+            {
+              "step": 2,
+              "description": "Error is logged",
+              "actor": "system"
+            }
+          ]
+        }
+      ],
+      "businessRules": []
+    }
+  ],
+  "relationships": [
+    {
+      "source": "UC2",
+      "target": "UC1",
+      "type": "generalization",
+      "description": "Extract Links with Security Validation is a more specialized version of Extract Links from Web Page",
+      "condition": ""
+    },
+    {
+      "source": "UC4",
+      "target": "UC6",
+      "type": "include",
+      "description": "User Authentication includes User Retrieval to fetch user data",
+      "condition": ""
+    },
+    {
+      "source": "UC8",
+      "target": "UC5",
+      "type": "include",
+      "description": "View All Comments includes Token Validation to verify user authentication",
+      "condition": ""
+    },
+    {
+      "source": "UC9",
+      "target": "UC5",
+      "type": "include",
+      "description": "Delete Comment includes Token Validation to verify user authentication",
+      "condition": ""
+    },
+    {
+      "source": "UC11",
+      "target": "UC10",
+      "type": "include",
+      "description": "Application Startup includes Initialize Database to set up the database",
+      "condition": ""
+    }
+  ],
+  "notes": [
+    {
+      "id": "N1",
+      "content": "The Cowsay utility has a command injection vulnerability as user input is directly concatenated into shell command without sanitization",
+      "attachedTo": "UC3",
+      "type": "security"
+    },
+    {
+      "id": "N2",
+      "content": "Passwords are stored as MD5 hashes which is considered insecure by modern standards",
+      "attachedTo": "UC4",
+      "type": "security"
+    },
+    {
+      "id": "N3",
+      "content": "The Link Processing Subsystem has security validation to prevent access to private IP addresses",
+      "attachedTo": "UC2",
+      "type": "security"
+    },
+    {
+      "id": "N4",
+      "content": "Error handling in the Comment Management Subsystem could be improved to provide more specific error messages",
+      "attachedTo": "UC7",
+      "type": "implementation"
+    }
+  ]
+}

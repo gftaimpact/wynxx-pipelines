@@ -1,0 +1,34 @@
+@startuml
+actor Client
+participant LoginController
+participant User
+database Postgres
+
+Client -> LoginController: POST /login with username and password
+note left: Client initiates login request
+
+LoginController -> User: fetch(username)
+note right: Retrieve user by username
+User --> LoginController: User object if found
+
+LoginController -> Postgres: md5(password)
+note right: Hash the provided password
+Postgres --> LoginController: MD5 hash of password
+
+LoginController -> LoginController: Compare hashed password with stored hash
+note right: Verify if passwords match
+
+alt Passwords match
+    LoginController -> User: token(secret)
+    note right: Generate authentication token
+    User --> LoginController: JWT token
+    LoginController --> Client: Return LoginResponse with token
+    note right: Send authentication token to client
+else Passwords don't match
+    LoginController --> Client: Throw Unauthorized exception with 'Access Denied' message
+    note right: Authentication failure
+else User not found
+    LoginController --> Client: NullPointerException when trying to access user.hashedPassword
+    note right: Server error due to null user
+end
+@enduml

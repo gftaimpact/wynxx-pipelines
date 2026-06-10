@@ -1,0 +1,22 @@
+@startuml
+plantuml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title System Context diagram for Vulnado
+
+Person(user, "User", "A user who authenticates and interacts with the system")
+Person_Ext(api_client, "API Client", "External client that consumes the REST APIs")
+
+System(vulnado_system, "Vulnado", "A Spring Boot web application that provides user authentication, comment management, and URL link extraction functionality")
+SystemDb(postgres_db, "PostgreSQL Database", "Stores user credentials and comments data")
+System_Ext(external_websites, "External Websites", "Websites from which links are extracted")
+
+Rel(user, vulnado_system, "Authenticates and manages comments")
+Rel(api_client, vulnado_system, "Makes API calls to extract links and manage comments")
+Rel(vulnado_system, postgres_db, "Reads from and writes to")
+Rel(vulnado_system, external_websites, "Extracts links from")
+
+@enduml

@@ -1,0 +1,191 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/LinkLister.java",
+    "className": "LinkLister",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Extract and validate hyperlinks from web pages",
+    "interactions": [
+      "Connects to external URLs to fetch HTML content",
+      "Parses HTML documents to extract hyperlinks",
+      "Validates URLs against private IP address ranges"
+    ],
+    "businessKeywords": [
+      "web scraping",
+      "link extraction",
+      "URL validation"
+    ],
+    "technicalCategory": "Web Utility Component",
+    "dataPatterns": [
+      "URL processing",
+      "HTML parsing",
+      "List collection management"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "org.jsoup.Jsoup",
+        "org.jsoup.nodes.Document",
+        "org.jsoup.nodes.Element",
+        "org.jsoup.select.Elements",
+        "java.util.ArrayList",
+        "java.util.List",
+        "java.io.IOException",
+        "java.net.URL"
+      ],
+      "consumers": [],
+      "providers": [
+        "Provides link extraction services to other components"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Library Component",
+      "resourceRequirements": [
+        "Network access for HTTP connections",
+        "Memory for HTML document parsing"
+      ],
+      "scalingNeeds": "Depends on number of concurrent URL processing requests"
+    },
+    "security": {
+      "dataClassification": "External URL data",
+      "authenticationNeeds": "None specified",
+      "authorizationPatterns": [
+        "IP address validation to prevent SSRF attacks"
+      ]
+    },
+    "performance": {
+      "criticalOperations": [
+        "Network I/O for URL connections",
+        "HTML parsing"
+      ],
+      "dataVolume": "Depends on size of HTML documents being processed",
+      "concurrencyModel": "Not specified, likely synchronous"
+    }
+  },
+  "classDetails": {
+    "name": "LinkLister",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [],
+    "methods": [
+      {
+        "name": "getLinks",
+        "visibility": "public",
+        "static": true,
+        "returnType": "List<String>",
+        "parameters": [
+          {
+            "name": "url",
+            "type": "String"
+          }
+        ],
+        "exceptions": [
+          "IOException"
+        ],
+        "description": "Extracts all hyperlinks from a given URL"
+      },
+      {
+        "name": "getLinksV2",
+        "visibility": "public",
+        "static": true,
+        "returnType": "List<String>",
+        "parameters": [
+          {
+            "name": "url",
+            "type": "String"
+          }
+        ],
+        "exceptions": [
+          "BadRequest"
+        ],
+        "description": "Extracts hyperlinks after validating the URL is not pointing to a private IP address"
+      }
+    ],
+    "relationships": [],
+    "interfaces": [],
+    "superclass": ""
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "Basic Link Extraction",
+        "steps": [
+          "Client calls LinkLister.getLinks(url)",
+          "Method creates empty ArrayList to store results",
+          "Jsoup connects to the provided URL and gets HTML document",
+          "Document is parsed to select all anchor elements",
+          "For each anchor element, extract absolute URL from href attribute",
+          "Add extracted URL to result list",
+          "Return list of URLs to caller"
+        ],
+        "exceptions": [
+          "IOException if URL connection or parsing fails"
+        ]
+      },
+      {
+        "name": "Secure Link Extraction with IP Validation",
+        "steps": [
+          "Client calls LinkLister.getLinksV2(url)",
+          "Method creates URL object from string parameter",
+          "Extract host from URL",
+          "Check if host starts with private IP ranges (172., 192.168, 10.)",
+          "If private IP detected, throw BadRequest exception",
+          "If URL is valid, call getLinks(url) to extract links",
+          "Return list of URLs to caller"
+        ],
+        "exceptions": [
+          "BadRequest if URL contains private IP or any other exception occurs"
+        ]
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      "Web Application",
+      "API Consumer"
+    ],
+    "mainScenarios": [
+      {
+        "name": "Extract Links from Web Page",
+        "actor": "Web Application",
+        "preconditions": [
+          "Valid URL is provided",
+          "Network connectivity is available"
+        ],
+        "steps": [
+          "Application calls LinkLister.getLinks with target URL",
+          "System connects to URL and retrieves HTML content",
+          "System parses HTML and extracts all hyperlinks",
+          "System returns list of absolute URLs to application"
+        ],
+        "postconditions": [
+          "Application receives complete list of hyperlinks from the page"
+        ],
+        "alternativeFlows": [
+          "If URL is invalid or unreachable, IOException is thrown"
+        ]
+      },
+      {
+        "name": "Extract Links with Security Validation",
+        "actor": "API Consumer",
+        "preconditions": [
+          "Valid URL is provided",
+          "Network connectivity is available"
+        ],
+        "steps": [
+          "Consumer calls LinkLister.getLinksV2 with target URL",
+          "System validates URL is not pointing to private IP address",
+          "System connects to URL and retrieves HTML content",
+          "System parses HTML and extracts all hyperlinks",
+          "System returns list of absolute URLs to consumer"
+        ],
+        "postconditions": [
+          "Consumer receives list of hyperlinks from public web pages only"
+        ],
+        "alternativeFlows": [
+          "If URL points to private IP (172.*, 192.168.*, 10.*), BadRequest exception is thrown",
+          "If any other exception occurs during processing, it's wrapped in BadRequest exception"
+        ]
+      }
+    ]
+  }
+}

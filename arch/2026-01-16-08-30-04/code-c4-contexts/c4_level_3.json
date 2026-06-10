@@ -1,0 +1,164 @@
+{
+  "components": [
+    {
+      "name": "LinkLister",
+      "technology": "Java",
+      "responsibility": "Extract and validate hyperlinks from web pages"
+    },
+    {
+      "name": "CowController",
+      "technology": "Spring REST Controller",
+      "responsibility": "Provides a REST endpoint for generating cowsay messages"
+    },
+    {
+      "name": "User",
+      "technology": "Java",
+      "responsibility": "Manages user authentication, token generation, and database operations for user data retrieval"
+    },
+    {
+      "name": "Cowsay",
+      "technology": "Java",
+      "responsibility": "Execute the cowsay command-line utility with user input and return the formatted output"
+    },
+    {
+      "name": "Comment",
+      "technology": "Java",
+      "responsibility": "Manages comment data including creation, retrieval, and deletion of comments in a database"
+    },
+    {
+      "name": "Postgres",
+      "technology": "Database Connection",
+      "responsibility": "Provides database connectivity"
+    },
+    {
+      "name": "External Cowsay Tool",
+      "technology": "Command-line utility",
+      "responsibility": "Formats text into ASCII art with cow character"
+    },
+    {
+      "name": "JWT Library",
+      "technology": "io.jsonwebtoken",
+      "responsibility": "Handles JWT token generation and validation"
+    },
+    {
+      "name": "VulnadoApplication",
+      "technology": "Spring Boot Application",
+      "responsibility": "Main application entry point for the Vulnado Spring Boot application"
+    },
+    {
+      "name": "LoginController",
+      "technology": "Spring REST Controller",
+      "responsibility": "Handles user authentication by validating credentials and issuing tokens"
+    },
+    {
+      "name": "Postgres",
+      "technology": "Data Access Layer",
+      "responsibility": "Database connection management and initialization for a user authentication and comment system"
+    },
+    {
+      "name": "LinksController",
+      "technology": "Spring REST Controller",
+      "responsibility": "Provides REST endpoints for retrieving links from URLs"
+    },
+    {
+      "name": "CommentsController",
+      "technology": "Spring REST Controller",
+      "responsibility": "Manages comment-related HTTP endpoints for creating, retrieving, and deleting comments"
+    },
+    {
+      "name": "LinkLister",
+      "technology": "Service",
+      "responsibility": "Extracts links from URLs"
+    },
+    {
+      "name": "User",
+      "technology": "Domain Model",
+      "responsibility": "Represents user data and provides user-related operations"
+    },
+    {
+      "name": "Comment",
+      "technology": "Domain Model",
+      "responsibility": "Represents comment data and provides comment-related operations"
+    }
+  ],
+  "relationships": [
+    {
+      "source": "CowController",
+      "target": "Cowsay",
+      "type": "Uses",
+      "technology": "Method call"
+    },
+    {
+      "source": "Cowsay",
+      "target": "External Cowsay Tool",
+      "type": "Executes",
+      "technology": "System command"
+    },
+    {
+      "source": "User",
+      "target": "Postgres",
+      "type": "Uses",
+      "technology": "JDBC"
+    },
+    {
+      "source": "User",
+      "target": "JWT Library",
+      "type": "Uses",
+      "technology": "Library dependency"
+    },
+    {
+      "source": "Comment",
+      "target": "Postgres",
+      "type": "Uses",
+      "technology": "JDBC"
+    },
+    {
+      "source": "VulnadoApplication",
+      "target": "Postgres",
+      "type": "Uses",
+      "technology": "Method call"
+    },
+    {
+      "source": "LoginController",
+      "target": "User",
+      "type": "Uses",
+      "technology": "Method call"
+    },
+    {
+      "source": "LoginController",
+      "target": "Postgres",
+      "type": "Uses",
+      "technology": "Method call"
+    },
+    {
+      "source": "LinksController",
+      "target": "LinkLister",
+      "type": "Uses",
+      "technology": "Method call"
+    },
+    {
+      "source": "CommentsController",
+      "target": "Comment",
+      "type": "Uses",
+      "technology": "Method call"
+    },
+    {
+      "source": "CommentsController",
+      "target": "User",
+      "type": "Uses",
+      "technology": "Method call"
+    },
+    {
+      "source": "User",
+      "target": "Postgres",
+      "type": "Uses",
+      "technology": "JDBC"
+    },
+    {
+      "source": "Comment",
+      "target": "Postgres",
+      "type": "Uses",
+      "technology": "JDBC"
+    }
+  ]
+}

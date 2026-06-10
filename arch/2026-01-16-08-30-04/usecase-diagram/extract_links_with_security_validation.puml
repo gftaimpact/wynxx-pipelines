@@ -1,0 +1,104 @@
+@startuml
+skinparam packageStyle rect
+skinparam actorStyle awesome
+
+' Actors
+:End User: as EndUser
+:System Administrator: as SysAdmin
+:API Client: as APIClient << system >>
+:Web Application: as WebApp << system >>
+:Authentication Service: as AuthService << system >>
+:User Management Service: as UserMgmtService << system >>
+:Database: as DB << system >>
+:System Shell: as SystemShell << system >>
+:Application Runtime Environment: as AppRuntime << system >>
+
+' System boundary
+rectangle "Vulnado Application" {
+  ' Authentication subsystem
+  package "Authentication Subsystem" {
+    (Login) as Login
+    (Validate Token) as ValidateToken
+    (Retrieve User Information) as RetrieveUser
+  }
+  
+  ' Comment Management subsystem
+  package "Comment Management Subsystem" {
+    (Create Comment) as CreateComment
+    (View Comments) as ViewComments
+    (Delete Comment) as DeleteComment
+  }
+  
+  ' Link Processing subsystem
+  package "Link Processing Subsystem" {
+    (Extract Links) as ExtractLinks
+    (Validate URL) as ValidateURL
+    (Parse HTML) as ParseHTML
+    
+    note right of ValidateURL
+      URLs pointing to private IP addresses 
+      (172.*, 192.168.*, 10.*) are not allowed
+    end note
+  }
+  
+  ' Cowsay subsystem
+  package "Cowsay Subsystem" {
+    (Generate Cowsay Message) as Cowsay
+    (Execute Shell Command) as ExecuteShell
+  }
+  
+  ' System Administration subsystem
+  package "System Administration Subsystem" {
+    (Start Application) as StartApp
+    (Configure Application) as ConfigApp
+    (Initialize Database) as InitDB
+  }
+}
+
+' Relationships between actors and use cases
+EndUser --> Login
+EndUser --> CreateComment
+EndUser --> ViewComments
+
+SysAdmin --> StartApp
+SysAdmin --> ConfigApp
+SysAdmin --> InitDB
+SysAdmin --> DeleteComment
+
+APIClient --> ExtractLinks
+APIClient --> CreateComment
+APIClient --> ViewComments
+
+WebApp --> ExtractLinks
+WebApp --> Cowsay
+
+AuthService --> Login
+AuthService --> ValidateToken
+
+UserMgmtService --> RetrieveUser
+
+DB --> Login
+DB <-- CreateComment
+DB --> ViewComments
+DB <-- DeleteComment
+DB <-- InitDB
+
+SystemShell <-- ExecuteShell
+
+AppRuntime <-- StartApp
+AppRuntime <-- ConfigApp
+
+' Include and extend relationships
+ExtractLinks ..> ValidateURL : <<include>>
+ExtractLinks ..> ParseHTML : <<include>>
+Login ..> ValidateToken : <<include>>
+Login ..> RetrieveUser : <<include>>
+Cowsay ..> ExecuteShell : <<include>>
+
+' Alternative flows as extensions
+(URL Points to Private IP) as PrivateIP
+(Exception During Processing) as Exception
+ExtractLinks <.. PrivateIP : <<extend>>
+ExtractLinks <.. Exception : <<extend>>
+
+@enduml

@@ -1,0 +1,290 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/CommentsController.java",
+    "className": "CommentsController",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Manages comment-related HTTP endpoints for creating, retrieving, and deleting comments",
+    "interactions": [
+      "Authenticates users via token validation",
+      "Retrieves all comments",
+      "Creates new comments",
+      "Deletes comments by ID"
+    ],
+    "businessKeywords": [
+      "comments",
+      "authentication",
+      "user content"
+    ],
+    "technicalCategory": "REST Controller",
+    "dataPatterns": [
+      "JSON request/response",
+      "Token-based authentication"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "Comment",
+        "User",
+        "CommentRequest"
+      ],
+      "consumers": [
+        "External API clients"
+      ],
+      "providers": [
+        "Comment data store"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Spring Boot web application",
+      "resourceRequirements": [
+        "JVM runtime",
+        "Web server"
+      ],
+      "scalingNeeds": "Stateless design allows horizontal scaling"
+    },
+    "security": {
+      "dataClassification": "User-generated content",
+      "authenticationNeeds": "Token-based authentication using app.secret",
+      "authorizationPatterns": [
+        "Token validation for GET and DELETE operations",
+        "Cross-Origin Resource Sharing (CORS) enabled for all endpoints"
+      ]
+    },
+    "performance": {
+      "criticalOperations": [
+        "Fetching all comments",
+        "Comment creation",
+        "Comment deletion"
+      ],
+      "dataVolume": "Dependent on comment storage size",
+      "concurrencyModel": "Spring MVC request handling"
+    }
+  },
+  "classDetails": {
+    "name": "CommentsController",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [
+      {
+        "name": "secret",
+        "type": "String",
+        "visibility": "private",
+        "annotations": [
+          "@Value(\"${app.secret}\")"
+        ]
+      }
+    ],
+    "methods": [
+      {
+        "name": "comments",
+        "returnType": "List<Comment>",
+        "visibility": "public",
+        "parameters": [
+          {
+            "name": "token",
+            "type": "String",
+            "annotations": [
+              "@RequestHeader(value=\"x-auth-token\")"
+            ]
+          }
+        ],
+        "annotations": [
+          "@CrossOrigin(origins = \"*\")",
+          "@RequestMapping(value = \"/comments\", method = RequestMethod.GET, produces = \"application/json\")"
+        ]
+      },
+      {
+        "name": "createComment",
+        "returnType": "Comment",
+        "visibility": "public",
+        "parameters": [
+          {
+            "name": "token",
+            "type": "String",
+            "annotations": [
+              "@RequestHeader(value=\"x-auth-token\")"
+            ]
+          },
+          {
+            "name": "input",
+            "type": "CommentRequest",
+            "annotations": [
+              "@RequestBody"
+            ]
+          }
+        ],
+        "annotations": [
+          "@CrossOrigin(origins = \"*\")",
+          "@RequestMapping(value = \"/comments\", method = RequestMethod.POST, produces = \"application/json\", consumes = \"application/json\")"
+        ]
+      },
+      {
+        "name": "deleteComment",
+        "returnType": "Boolean",
+        "visibility": "public",
+        "parameters": [
+          {
+            "name": "token",
+            "type": "String",
+            "annotations": [
+              "@RequestHeader(value=\"x-auth-token\")"
+            ]
+          },
+          {
+            "name": "id",
+            "type": "String",
+            "annotations": [
+              "@PathVariable(\"id\")"
+            ]
+          }
+        ],
+        "annotations": [
+          "@CrossOrigin(origins = \"*\")",
+          "@RequestMapping(value = \"/comments/{id}\", method = RequestMethod.DELETE, produces = \"application/json\")"
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "type": "uses",
+        "target": "Comment",
+        "description": "Uses Comment for data operations"
+      },
+      {
+        "type": "uses",
+        "target": "User",
+        "description": "Uses User for authentication"
+      },
+      {
+        "type": "uses",
+        "target": "CommentRequest",
+        "description": "Uses CommentRequest as input model"
+      }
+    ],
+    "interfaces": [],
+    "superclass": ""
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "Get All Comments",
+        "steps": [
+          "Client sends GET request to /comments with x-auth-token header",
+          "CommentsController.comments() receives the request",
+          "User.assertAuth() validates the token against the secret",
+          "Comment.fetch_all() retrieves all comments",
+          "Controller returns the comment list as JSON response"
+        ],
+        "exceptions": [
+          "If token validation fails, authentication error is returned"
+        ]
+      },
+      {
+        "name": "Create Comment",
+        "steps": [
+          "Client sends POST request to /comments with comment data and x-auth-token header",
+          "CommentsController.createComment() receives the request",
+          "Comment.create() creates a new comment with username and body",
+          "Controller returns the created comment as JSON response"
+        ],
+        "exceptions": []
+      },
+      {
+        "name": "Delete Comment",
+        "steps": [
+          "Client sends DELETE request to /comments/{id} with x-auth-token header",
+          "CommentsController.deleteComment() receives the request",
+          "Comment.delete() removes the comment with the specified ID",
+          "Controller returns boolean result as JSON response"
+        ],
+        "exceptions": []
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      {
+        "name": "API Client",
+        "description": "External system or user interface consuming the comments API"
+      },
+      {
+        "name": "Authenticated User",
+        "description": "User with valid authentication token"
+      }
+    ],
+    "mainScenarios": [
+      {
+        "name": "View All Comments",
+        "actor": "Authenticated User",
+        "preconditions": [
+          "User has valid authentication token"
+        ],
+        "steps": [
+          "User sends GET request to /comments endpoint with auth token",
+          "System validates the token",
+          "System retrieves all comments",
+          "System returns comments as JSON"
+        ],
+        "postconditions": [
+          "User receives list of all comments"
+        ],
+        "alternativeFlows": [
+          {
+            "condition": "Invalid authentication token",
+            "steps": [
+              "System returns authentication error"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Create New Comment",
+        "actor": "API Client",
+        "preconditions": [
+          "Client has comment data (username and body)"
+        ],
+        "steps": [
+          "Client sends POST request to /comments endpoint with comment data and auth token",
+          "System creates new comment with provided data",
+          "System returns the created comment"
+        ],
+        "postconditions": [
+          "New comment is stored in the system",
+          "Client receives the created comment data"
+        ],
+        "alternativeFlows": []
+      },
+      {
+        "name": "Delete Existing Comment",
+        "actor": "Authenticated User",
+        "preconditions": [
+          "User has valid authentication token",
+          "Comment with specified ID exists"
+        ],
+        "steps": [
+          "User sends DELETE request to /comments/{id} endpoint with auth token",
+          "System validates the token",
+          "System deletes the comment with specified ID",
+          "System returns success indicator"
+        ],
+        "postconditions": [
+          "Comment is removed from the system"
+        ],
+        "alternativeFlows": [
+          {
+            "condition": "Invalid authentication token",
+            "steps": [
+              "System returns authentication error"
+            ]
+          },
+          {
+            "condition": "Comment does not exist",
+            "steps": [
+              "System returns false as operation result"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

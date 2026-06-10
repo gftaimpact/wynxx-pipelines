@@ -1,0 +1,159 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/VulnadoApplication.java",
+    "className": "VulnadoApplication",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Main application entry point for the Vulnado Spring Boot application",
+    "interactions": [
+      "Initializes database connection through Postgres.setup()",
+      "Starts Spring Boot application"
+    ],
+    "businessKeywords": [
+      "application",
+      "startup",
+      "initialization"
+    ],
+    "technicalCategory": "Spring Boot Application",
+    "dataPatterns": [
+      "Database initialization"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "org.springframework.boot.SpringApplication",
+        "org.springframework.boot.autoconfigure.SpringBootApplication",
+        "org.springframework.boot.web.servlet.ServletComponentScan",
+        "com.scalesec.vulnado.Postgres"
+      ],
+      "consumers": [],
+      "providers": [
+        "Spring Boot application context"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Java application with Spring Boot",
+      "resourceRequirements": [
+        "JVM",
+        "Database (PostgreSQL)"
+      ],
+      "scalingNeeds": "Standard Spring Boot scaling capabilities"
+    },
+    "security": {
+      "dataClassification": "Application configuration",
+      "authenticationNeeds": "Not specified in this class",
+      "authorizationPatterns": []
+    },
+    "performance": {
+      "criticalOperations": [
+        "Application startup",
+        "Database initialization"
+      ],
+      "dataVolume": "Not specified",
+      "concurrencyModel": "Spring Boot default concurrency model"
+    }
+  },
+  "classDetails": {
+    "name": "VulnadoApplication",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [],
+    "methods": [
+      {
+        "name": "main",
+        "visibility": "public static",
+        "returnType": "void",
+        "parameters": [
+          {
+            "name": "args",
+            "type": "String[]"
+          }
+        ],
+        "exceptions": [],
+        "isStatic": true,
+        "isAbstract": false,
+        "isFinal": false,
+        "isSynchronized": false
+      }
+    ],
+    "relationships": [
+      {
+        "type": "uses",
+        "target": "Postgres",
+        "description": "Calls setup method"
+      },
+      {
+        "type": "uses",
+        "target": "SpringApplication",
+        "description": "Calls run method"
+      }
+    ],
+    "interfaces": [],
+    "superclass": "Object"
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "Application Startup",
+        "steps": [
+          {
+            "sequence": 1,
+            "action": "main method invoked",
+            "actor": "JVM"
+          },
+          {
+            "sequence": 2,
+            "action": "Postgres.setup() called",
+            "actor": "VulnadoApplication"
+          },
+          {
+            "sequence": 3,
+            "action": "SpringApplication.run(VulnadoApplication.class, args) called",
+            "actor": "VulnadoApplication"
+          },
+          {
+            "sequence": 4,
+            "action": "Spring Boot application context initialized",
+            "actor": "SpringApplication"
+          }
+        ],
+        "exceptionPaths": []
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      "System Administrator",
+      "Application Runtime Environment"
+    ],
+    "mainScenarios": [
+      {
+        "name": "Application Startup",
+        "actor": "System Administrator",
+        "preconditions": [
+          "JVM is available",
+          "Database is accessible"
+        ],
+        "steps": [
+          "System Administrator starts the application",
+          "Application initializes database connection",
+          "Spring Boot application context is created",
+          "Application becomes ready to handle requests"
+        ],
+        "postconditions": [
+          "Application is running and ready to serve requests"
+        ],
+        "alternativeFlows": [
+          {
+            "name": "Database Connection Failure",
+            "trigger": "Database is not accessible",
+            "steps": [
+              "Application startup fails",
+              "Error is logged"
+            ],
+            "outcome": "Application fails to start"
+          }
+        ]
+      }
+    ]
+  }
+}

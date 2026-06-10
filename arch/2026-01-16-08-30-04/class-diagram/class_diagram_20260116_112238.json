@@ -1,0 +1,600 @@
+{
+  "classes": [
+    {
+      "name": "LinkLister",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [],
+      "methods": [
+        {
+          "name": "getLinks",
+          "returnType": "List<String>",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "getLinksV2",
+          "returnType": "List<String>",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "CowController",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [],
+      "methods": [
+        {
+          "name": "cowsay",
+          "returnType": "String",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "input",
+              "type": "String"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "String",
+          "visibility": "public",
+          "isStatic": false,
+          "isFinal": false
+        },
+        {
+          "name": "username",
+          "type": "String",
+          "visibility": "public",
+          "isStatic": false,
+          "isFinal": false
+        },
+        {
+          "name": "hashedPassword",
+          "type": "String",
+          "visibility": "public",
+          "isStatic": false,
+          "isFinal": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "User",
+          "returnType": "",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "id",
+              "type": "String"
+            },
+            {
+              "name": "username",
+              "type": "String"
+            },
+            {
+              "name": "hashedPassword",
+              "type": "String"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        },
+        {
+          "name": "token",
+          "returnType": "String",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "secret",
+              "type": "String"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        },
+        {
+          "name": "assertAuth",
+          "returnType": "void",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "secret",
+              "type": "String"
+            },
+            {
+              "name": "token",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "fetch",
+          "returnType": "User",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "un",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "Cowsay",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [],
+      "methods": [
+        {
+          "name": "run",
+          "returnType": "String",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "input",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "Comment",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "String",
+          "visibility": "public",
+          "isStatic": false,
+          "isFinal": false
+        },
+        {
+          "name": "username",
+          "type": "String",
+          "visibility": "public",
+          "isStatic": false,
+          "isFinal": false
+        },
+        {
+          "name": "body",
+          "type": "String",
+          "visibility": "public",
+          "isStatic": false,
+          "isFinal": false
+        },
+        {
+          "name": "created_on",
+          "type": "Timestamp",
+          "visibility": "public",
+          "isStatic": false,
+          "isFinal": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "Comment",
+          "returnType": "",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "id",
+              "type": "String"
+            },
+            {
+              "name": "username",
+              "type": "String"
+            },
+            {
+              "name": "body",
+              "type": "String"
+            },
+            {
+              "name": "created_on",
+              "type": "Timestamp"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        },
+        {
+          "name": "create",
+          "returnType": "Comment",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "String"
+            },
+            {
+              "name": "body",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "fetch_all",
+          "returnType": "List<Comment>",
+          "visibility": "public",
+          "parameters": [],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "delete",
+          "returnType": "Boolean",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "id",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "commit",
+          "returnType": "Boolean",
+          "visibility": "private",
+          "parameters": [],
+          "isStatic": false,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "VulnadoApplication",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [],
+      "methods": [
+        {
+          "name": "main",
+          "returnType": "void",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "args",
+              "type": "String[]"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "LoginController",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [
+        {
+          "name": "secret",
+          "type": "String",
+          "visibility": "private",
+          "isStatic": false,
+          "isFinal": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "login",
+          "returnType": "LoginResponse",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "input",
+              "type": "LoginRequest"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "Postgres",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [],
+      "methods": [
+        {
+          "name": "connection",
+          "returnType": "Connection",
+          "visibility": "public",
+          "parameters": [],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "setup",
+          "returnType": "void",
+          "visibility": "public",
+          "parameters": [],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "md5",
+          "returnType": "String",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "input",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "insertUser",
+          "returnType": "void",
+          "visibility": "private",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "String"
+            },
+            {
+              "name": "password",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        },
+        {
+          "name": "insertComment",
+          "returnType": "void",
+          "visibility": "private",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "String"
+            },
+            {
+              "name": "body",
+              "type": "String"
+            }
+          ],
+          "isStatic": true,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "LinksController",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [],
+      "methods": [
+        {
+          "name": "links",
+          "returnType": "List<String>",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "String"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        },
+        {
+          "name": "linksV2",
+          "returnType": "List<String>",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "String"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        }
+      ]
+    },
+    {
+      "name": "CommentsController",
+      "package": "com.scalesec.vulnado",
+      "type": "class",
+      "visibility": "public",
+      "attributes": [
+        {
+          "name": "secret",
+          "type": "String",
+          "visibility": "private",
+          "isStatic": false,
+          "isFinal": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "comments",
+          "returnType": "List<Comment>",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "token",
+              "type": "String"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        },
+        {
+          "name": "createComment",
+          "returnType": "Comment",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "token",
+              "type": "String"
+            },
+            {
+              "name": "input",
+              "type": "CommentRequest"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        },
+        {
+          "name": "deleteComment",
+          "returnType": "Boolean",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": "token",
+              "type": "String"
+            },
+            {
+              "name": "id",
+              "type": "String"
+            }
+          ],
+          "isStatic": false,
+          "isAbstract": false
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "source": "VulnadoApplication",
+      "target": "Object",
+      "type": "inheritance",
+      "multiplicity": "1:1",
+      "label": "extends"
+    },
+    {
+      "source": "CowController",
+      "target": "Cowsay",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    },
+    {
+      "source": "User",
+      "target": "Postgres",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    },
+    {
+      "source": "Comment",
+      "target": "Postgres",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    },
+    {
+      "source": "VulnadoApplication",
+      "target": "Postgres",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    },
+    {
+      "source": "LoginController",
+      "target": "User",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    },
+    {
+      "source": "LoginController",
+      "target": "Postgres",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    },
+    {
+      "source": "LinksController",
+      "target": "LinkLister",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    },
+    {
+      "source": "CommentsController",
+      "target": "Comment",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    },
+    {
+      "source": "CommentsController",
+      "target": "User",
+      "type": "association",
+      "multiplicity": "1:1",
+      "label": "uses"
+    }
+  ],
+  "packages": [
+    {
+      "name": "com.scalesec.vulnado",
+      "classes": [
+        "LinkLister",
+        "CowController",
+        "User",
+        "Cowsay",
+        "Comment",
+        "VulnadoApplication",
+        "LoginController",
+        "Postgres",
+        "LinksController",
+        "CommentsController"
+      ],
+      "dependencies": []
+    }
+  ]
+}

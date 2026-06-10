@@ -1,0 +1,23 @@
+@startuml
+actor Client
+participant LinksController
+participant LinkLister
+
+Client -> LinksController: HTTP request to /links with URL parameter
+note right of Client: Client requests link extraction
+
+LinksController -> LinkLister: getLinks(url)
+note right of LinksController: Extract links from the provided URL
+
+LinksController <-- LinkLister: List<String> (List of extracted links)
+Client <-- LinksController: Return JSON response with links
+note right of LinksController: Send extracted links to client
+
+alt IOException occurs
+    LinkLister --> LinksController: Propagate IOException
+    note right of LinkLister: Error handling for URL processing failures
+    
+    LinksController --> Client: Spring's exception handler processes IOException
+    note right of LinksController: Spring converts exception to HTTP error response
+end
+@enduml

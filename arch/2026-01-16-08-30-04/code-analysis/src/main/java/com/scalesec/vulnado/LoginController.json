@@ -1,0 +1,242 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/LoginController.java",
+    "className": "LoginController",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Handles user authentication by validating credentials and issuing tokens",
+    "interactions": [
+      "Receives login requests with username and password",
+      "Fetches user data from database",
+      "Validates password hashes",
+      "Issues authentication tokens"
+    ],
+    "businessKeywords": [
+      "authentication",
+      "login",
+      "security",
+      "user management"
+    ],
+    "technicalCategory": "REST Controller",
+    "dataPatterns": [
+      "User credentials",
+      "Authentication tokens"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "User",
+        "Postgres",
+        "LoginRequest",
+        "LoginResponse",
+        "Unauthorized"
+      ],
+      "consumers": [
+        "Frontend clients (implied by CrossOrigin annotation)"
+      ],
+      "providers": [
+        "User.fetch method",
+        "Postgres.md5 method"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Spring Boot web application",
+      "resourceRequirements": [
+        "JVM runtime",
+        "Database connection"
+      ],
+      "scalingNeeds": "Stateless design allows horizontal scaling"
+    },
+    "security": {
+      "dataClassification": "Sensitive - handles authentication credentials",
+      "authenticationNeeds": "Implements authentication mechanism",
+      "authorizationPatterns": [
+        "Token-based authentication",
+        "Password hashing for security"
+      ]
+    },
+    "performance": {
+      "criticalOperations": [
+        "Database user lookup",
+        "Password hash verification"
+      ],
+      "dataVolume": "Low to medium (authentication requests)",
+      "concurrencyModel": "Spring MVC request handling model"
+    }
+  },
+  "classDetails": {
+    "name": "LoginController",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [
+      {
+        "name": "secret",
+        "type": "String",
+        "visibility": "private",
+        "annotations": [
+          "@Value(\"${app.secret}\")"
+        ]
+      }
+    ],
+    "methods": [
+      {
+        "name": "login",
+        "returnType": "LoginResponse",
+        "visibility": "public",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "LoginRequest"
+          }
+        ],
+        "annotations": [
+          "@CrossOrigin(origins = \"*\")",
+          "@RequestMapping(value = \"/login\", method = RequestMethod.POST, produces = \"application/json\", consumes = \"application/json\")"
+        ],
+        "exceptions": []
+      }
+    ],
+    "relationships": [
+      {
+        "type": "uses",
+        "target": "User",
+        "description": "Fetches user data"
+      },
+      {
+        "type": "uses",
+        "target": "Postgres",
+        "description": "Uses for password hashing verification"
+      },
+      {
+        "type": "creates",
+        "target": "LoginResponse",
+        "description": "Creates response with token"
+      },
+      {
+        "type": "throws",
+        "target": "Unauthorized",
+        "description": "Throws on authentication failure"
+      }
+    ],
+    "interfaces": [],
+    "superclass": ""
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "Authentication Flow",
+        "steps": [
+          {
+            "sequence": 1,
+            "action": "Client sends POST request to /login with username and password",
+            "component": "Client"
+          },
+          {
+            "sequence": 2,
+            "action": "LoginController receives LoginRequest object",
+            "component": "LoginController"
+          },
+          {
+            "sequence": 3,
+            "action": "LoginController calls User.fetch with username",
+            "component": "User"
+          },
+          {
+            "sequence": 4,
+            "action": "LoginController hashes password with Postgres.md5",
+            "component": "Postgres"
+          },
+          {
+            "sequence": 5,
+            "action": "LoginController compares hashed password with stored hash",
+            "component": "LoginController"
+          },
+          {
+            "sequence": 6,
+            "action": "If match, generates token using user.token(secret)",
+            "component": "User"
+          },
+          {
+            "sequence": 7,
+            "action": "Returns LoginResponse with token",
+            "component": "LoginController"
+          },
+          {
+            "sequence": 8,
+            "action": "If no match, throws Unauthorized exception",
+            "component": "LoginController"
+          }
+        ],
+        "exceptionPaths": [
+          {
+            "condition": "Password hash doesn't match",
+            "action": "Throw Unauthorized exception with 'Access Denied' message",
+            "result": "HTTP 401 response"
+          },
+          {
+            "condition": "User not found (implied)",
+            "action": "Likely NullPointerException when trying to access user.hashedPassword",
+            "result": "Server error"
+          }
+        ]
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      {
+        "name": "Client Application",
+        "description": "Any client that needs to authenticate users"
+      },
+      {
+        "name": "End User",
+        "description": "Person attempting to authenticate"
+      }
+    ],
+    "mainScenarios": [
+      {
+        "name": "Successful Authentication",
+        "description": "User successfully logs in and receives an authentication token",
+        "preconditions": [
+          "User exists in the system",
+          "Client has correct username and password"
+        ],
+        "steps": [
+          "Client submits username and password to /login endpoint",
+          "System fetches user record by username",
+          "System hashes provided password and compares with stored hash",
+          "System generates authentication token",
+          "System returns token to client"
+        ],
+        "postconditions": [
+          "Client receives valid authentication token"
+        ],
+        "businessRules": [
+          "Passwords must be stored as MD5 hashes",
+          "Authentication tokens are generated using a secret key"
+        ]
+      },
+      {
+        "name": "Failed Authentication",
+        "description": "User provides incorrect credentials",
+        "preconditions": [
+          "User exists in the system",
+          "Client provides incorrect password"
+        ],
+        "steps": [
+          "Client submits username and incorrect password to /login endpoint",
+          "System fetches user record by username",
+          "System hashes provided password and compares with stored hash",
+          "System detects mismatch between password hashes"
+        ],
+        "postconditions": [
+          "Client receives 401 Unauthorized response",
+          "No authentication token is issued"
+        ],
+        "businessRules": [
+          "Access must be denied when credentials don't match",
+          "Error message should not reveal whether username or password was incorrect"
+        ]
+      }
+    ]
+  }
+}

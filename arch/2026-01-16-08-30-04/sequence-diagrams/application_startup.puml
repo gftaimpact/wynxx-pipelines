@@ -1,0 +1,34 @@
+@startuml
+title Application Startup
+
+actor JVM
+participant VulnadoApplication
+database Postgres
+participant SpringApplication
+
+JVM -> VulnadoApplication: main(args)
+note right: Entry point of the application
+
+VulnadoApplication -> Postgres: setup()
+note right: Initialize database schema and seed data
+
+Postgres -> Postgres: connection()
+note right: Establish database connection
+
+Postgres -> Postgres: insertUser(username, password)
+note right: Insert seed users into database
+
+Postgres -> Postgres: insertComment(username, body)
+note right: Insert seed comments into database
+
+VulnadoApplication -> SpringApplication: run(VulnadoApplication.class, args)
+note right: Start Spring Boot application
+
+SpringApplication -> SpringApplication: initialize application context
+note right: Spring Boot initializes application context and beans
+
+alt Database operations fail
+    Postgres -> VulnadoApplication: Print exception and exit application
+    note right: Application terminates on database setup failure
+end
+@enduml

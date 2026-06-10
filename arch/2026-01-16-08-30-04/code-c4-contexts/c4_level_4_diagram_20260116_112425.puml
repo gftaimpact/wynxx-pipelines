@@ -1,0 +1,118 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title "Vulnado Application - Component Level Class Diagram"
+
+package "com.scalesec.vulnado" {
+    class VulnadoApplication {
+        +static void main(String[] args)
+    }
+    
+    class User {
+        -String id
+        -String username
+        -String password
+        -static SecretKey SECRET_KEY
+        +static String login(String username, String password)
+        +static User getUser(String token)
+        -String generateToken()
+        +static User fetch(String username)
+    }
+    
+    class Comment {
+        -String id
+        -String username
+        -String body
+        -Date created
+        -String content
+        +static List<Comment> fetch()
+        +static Comment create(String username, String body)
+        +static void delete(String id)
+        +static List<Comment> all()
+    }
+    
+    class Postgres {
+        +static void setup()
+        +static Connection getConnection()
+        +static String md5(String input)
+    }
+    
+    class LinkLister {
+        +List<String> getLinks(String url)
+        -boolean validateUrl(String url)
+        +static List<String> getLinks(String url)
+        +static List<String> getLinksV2(String url)
+    }
+    
+    class Cowsay {
+        +static String run(String input)
+    }
+    
+    class CowController {
+        +String cowsay(String input)
+    }
+    
+    class LoginController {
+        +LoginResponse login(LoginRequest req)
+    }
+    
+    class LinksController {
+        +List<String> links(String url)
+        +List<String> linksV2(String url)
+    }
+    
+    class CommentsController {
+        +List<Comment> index(String token)
+        +Comment create(CommentRequest req)
+        +void delete(String token, String id)
+    }
+    
+    class LoginRequest {
+        +String username
+        +String password
+    }
+    
+    class LoginResponse {
+        +String token
+    }
+    
+    class CommentRequest {
+        +String username
+        +String content
+    }
+}
+
+' External dependencies
+component "JSoup" as jsoup
+component "JWT" as jwt
+component "Spring Boot" as springboot
+component "Database" as database
+
+' Relationships
+VulnadoApplication --> Postgres : "uses"
+CowController --> Cowsay : "uses"
+User --> Postgres : "uses for persistence"
+User --> jwt : "uses"
+Comment --> Postgres : "uses for persistence"
+LinkLister --> jsoup : "uses"
+LoginController --> User : "uses"
+LoginController --> LoginRequest : "uses"
+LoginController --> LoginResponse : "returns"
+LinksController --> LinkLister : "uses"
+CommentsController --> Comment : "manages"
+CommentsController --> User : "authenticates"
+CommentsController --> CommentRequest : "uses"
+VulnadoApplication --> springboot : "uses"
+Postgres --> database : "connects to"
+
+' Controller relationships
+VulnadoApplication --> CowController : "initializes"
+VulnadoApplication --> LoginController : "initializes"
+VulnadoApplication --> LinksController : "initializes"
+VulnadoApplication --> CommentsController : "initializes"
+
+@enduml

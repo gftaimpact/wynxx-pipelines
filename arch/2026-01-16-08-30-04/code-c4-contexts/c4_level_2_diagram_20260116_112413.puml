@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_LEFT_RIGHT()
+
+title Container Diagram for Vulnado Application
+
+Person(user, "User", "A user of the Vulnado application")
+
+System_Boundary(vulnado_system, "Vulnado System") {
+    Container(web_app, "Vulnado Web Application", "Spring Boot, Java", "Provides REST endpoints for cowsay messages, user authentication, and comment management")
+    ContainerDb(db, "PostgreSQL Database", "PostgreSQL", "Stores user credentials and comments data")
+}
+
+System_Ext(web_client, "Web Client", "Browser-based client", "Consumes REST APIs provided by the Vulnado application")
+System_Ext(external_web, "External Web Services", "HTTP/HTTPS", "External web pages that are scraped for links")
+System_Ext(system_shell, "System Shell", "OS Process", "Executes system commands")
+
+Rel(web_client, web_app, "Uses", "HTTP/REST")
+Rel(web_app, db, "Uses", "JDBC")
+Rel(web_app, external_web, "Fetches data from", "HTTP/HTTPS")
+Rel(web_app, system_shell, "Executes", "Process execution")
+
+@enduml

@@ -1,0 +1,107 @@
+@startuml
+
+skinparam packageStyle rect
+skinparam actorStyle awesome
+
+' Actors
+actor "End User" as end_user
+actor "System Administrator" as system_admin
+actor "API Client" as api_client #lightblue
+actor "Web Application" as web_application #lightblue
+actor "Authentication Service" as auth_service #lightblue
+actor "User Management Service" as user_mgmt_service #lightblue
+database "Database" as database
+actor "System Shell" as system_shell #lightblue
+actor "Application Runtime Environment" as app_runtime #lightblue
+
+' System boundary
+rectangle "Vulnado Application" {
+  ' Authentication Subsystem
+  package "Authentication Subsystem" {
+    usecase "Login" as UC1
+    usecase "Validate Token" as UC2
+    usecase "Retrieve User Information" as UC3
+  }
+
+  ' Comment Management Subsystem
+  package "Comment Management Subsystem" {
+    usecase "Create Comment" as UC4
+    usecase "Delete Comment" as UC5
+    usecase "View All Comments" as UC8
+  }
+
+  ' Link Management Subsystem
+  package "Link Management Subsystem" {
+    usecase "Extract Links from URL" as UC6
+  }
+
+  ' Cowsay Subsystem
+  package "Cowsay Subsystem" {
+    usecase "Generate Cowsay Message" as UC7
+  }
+
+  ' System Administration Subsystem
+  package "System Administration Subsystem" {
+    usecase "Start Application" as UC9
+    usecase "Configure Application" as UC10
+    usecase "Initialize Database" as UC11
+  }
+}
+
+' Relationships between actors and use cases
+end_user --> UC1
+end_user --> UC4
+end_user --> UC8
+system_admin --> UC5
+system_admin --> UC9
+system_admin --> UC10
+system_admin --> UC11
+api_client --> UC4
+api_client --> UC6
+web_application --> UC6
+web_application --> UC7
+
+' System actors relationships
+auth_service --> UC1
+auth_service --> UC2
+user_mgmt_service --> UC3
+database --> UC1
+database --> UC3
+database --> UC4
+database --> UC5
+database --> UC8
+system_shell --> UC7
+app_runtime --> UC9
+app_runtime --> UC10
+
+' Include and extend relationships
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC4 ..> UC2 : <<include>>
+UC5 ..> UC2 : <<include>>
+UC8 ..> UC2 : <<include>>
+
+' Notes
+note right of UC8
+  Retrieves all comments from database
+  Requires valid authentication token
+  Returns comments as JSON
+end note
+
+note right of UC1
+  Authenticates users and 
+  provides access token
+end note
+
+note right of UC6
+  Extracts links from provided URLs
+  Can be used by both API clients
+  and web application
+end note
+
+note right of UC7
+  Executes system shell command
+  to generate cowsay messages
+end note
+
+@enduml

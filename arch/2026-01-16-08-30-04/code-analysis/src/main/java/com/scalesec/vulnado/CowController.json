@@ -1,0 +1,156 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/CowController.java",
+    "className": "CowController",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Provides a REST endpoint for generating cowsay messages",
+    "interactions": [
+      "Calls Cowsay.run() to generate cowsay messages"
+    ],
+    "businessKeywords": [
+      "cowsay",
+      "message generation"
+    ],
+    "technicalCategory": "REST Controller",
+    "dataPatterns": [
+      "Receives string input and returns string output"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "Cowsay"
+      ],
+      "consumers": [
+        "Web clients"
+      ],
+      "providers": [
+        "Cowsay service"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Spring Boot web application",
+      "resourceRequirements": [
+        "JVM"
+      ],
+      "scalingNeeds": "Stateless, horizontally scalable"
+    },
+    "security": {
+      "dataClassification": "Public",
+      "authenticationNeeds": "None specified",
+      "authorizationPatterns": [
+        "No authorization controls visible"
+      ]
+    },
+    "performance": {
+      "criticalOperations": [
+        "cowsay endpoint processing"
+      ],
+      "dataVolume": "Small text strings",
+      "concurrencyModel": "Spring MVC request handling"
+    }
+  },
+  "classDetails": {
+    "name": "CowController",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [],
+    "methods": [
+      {
+        "name": "cowsay",
+        "returnType": "String",
+        "visibility": "public",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "String",
+            "defaultValue": "I love Linux!"
+          }
+        ],
+        "annotations": [
+          "@RequestMapping(value = \"/cowsay\")"
+        ],
+        "isStatic": false,
+        "isFinal": false,
+        "isAbstract": false
+      }
+    ],
+    "relationships": [
+      {
+        "type": "dependency",
+        "target": "Cowsay",
+        "nature": "method call"
+      }
+    ],
+    "interfaces": [],
+    "superclass": "",
+    "annotations": [
+      "@RestController",
+      "@EnableAutoConfiguration"
+    ]
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "cowsay request handling",
+        "steps": [
+          {
+            "from": "Client",
+            "to": "CowController",
+            "action": "HTTP GET /cowsay",
+            "parameters": [
+              "input (optional)"
+            ]
+          },
+          {
+            "from": "CowController",
+            "to": "Cowsay",
+            "action": "run(input)",
+            "parameters": [
+              "input"
+            ]
+          },
+          {
+            "from": "Cowsay",
+            "to": "CowController",
+            "action": "return cowsay string",
+            "parameters": []
+          },
+          {
+            "from": "CowController",
+            "to": "Client",
+            "action": "return HTTP response",
+            "parameters": [
+              "cowsay string"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      "Web client",
+      "API consumer"
+    ],
+    "mainScenarios": [
+      {
+        "name": "Generate cowsay message",
+        "steps": [
+          "Client sends GET request to /cowsay endpoint",
+          "Client optionally provides 'input' parameter",
+          "System generates cowsay ASCII art using the input text",
+          "System returns the generated ASCII art to client"
+        ],
+        "alternativeFlows": [
+          "If no input is provided, system uses default text 'I love Linux!'"
+        ],
+        "preconditions": [
+          "Web service is running"
+        ],
+        "postconditions": [
+          "Client receives cowsay ASCII art"
+        ]
+      }
+    ]
+  }
+}

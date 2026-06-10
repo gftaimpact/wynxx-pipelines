@@ -1,0 +1,110 @@
+@startuml
+
+skinparam packageStyle rect
+skinparam actorStyle awesome
+
+' Define actors
+:End User: as end_user
+:System Administrator: as system_admin
+:API Client: as api_client <<system>>
+:Web Application: as web_application <<system>>
+:Authentication Service: as auth_service <<system>>
+:User Management Service: as user_mgmt_service <<system>>
+:Database: as database <<system>>
+:System Shell: as system_shell <<system>>
+:Application Runtime Environment: as app_runtime <<system>>
+
+' Define system boundary
+rectangle "Vulnado Application" {
+  package "Authentication Subsystem" {
+    usecase "Login" as UC1
+    usecase "Validate Token" as UC2
+    usecase "Retrieve User Information" as UC3
+  }
+  
+  package "Comment Management Subsystem" {
+    usecase "Create Comment" as UC4
+    usecase "View Comments" as UC5
+    usecase "Delete Comment" as UC9
+  }
+  
+  package "Link Management Subsystem" {
+    usecase "Extract Links from URL" as UC6
+  }
+  
+  package "Cowsay Subsystem" {
+    usecase "Generate Cowsay Message" as UC7
+    usecase "Display Cowsay Output" as UC8
+  }
+  
+  package "System Management" {
+    usecase "Initialize Database" as UC10
+    usecase "Configure Application" as UC11
+  }
+}
+
+' Actor relationships with use cases
+end_user --> UC1
+end_user --> UC4
+end_user --> UC5
+end_user --> UC7
+end_user --> UC8
+
+system_admin --> UC9
+system_admin --> UC10
+system_admin --> UC11
+
+api_client --> UC4
+api_client --> UC5
+api_client --> UC6
+
+web_application --> UC6
+web_application --> UC8
+
+auth_service --> UC1
+auth_service --> UC2
+
+user_mgmt_service --> UC3
+
+database --> UC1
+database --> UC3
+database --> UC4
+database --> UC5
+database --> UC9
+database --> UC10
+
+system_shell --> UC7
+
+app_runtime ..> UC11
+
+' Include and extend relationships
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC4 ..> UC2 : <<include>>
+UC5 ..> UC2 : <<include>>
+UC9 ..> UC2 : <<include>>
+UC7 ..> UC8 : <<include>>
+
+' Notes for clarification
+note right of UC9
+  Requires admin privileges
+  Deletes comment by ID
+end note
+
+note bottom of UC1
+  Uses JWT for authentication
+end note
+
+note right of UC6
+  Extracts links from HTML content
+end note
+
+note right of UC7
+  Executes system shell command
+end note
+
+note bottom of UC10
+  Performed during application startup
+end note
+
+@enduml

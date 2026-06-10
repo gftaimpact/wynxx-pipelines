@@ -1,0 +1,87 @@
+name: Code Fixer - RE
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  repository-projects: write
+
+jobs:
+  run_code_fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate with Keycloak
+        id: keycloak_auth
+        run: |
+          TOKEN_RESPONSE=$(curl -s -X POST 'https://auth.${{ vars.INSTANCE }}/realms/ai-impact/protocol/openid-connect/token' \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            -d 'client_id=ai-impact-client' \
+            -d 'grant_type=password' \
+            -d 'username=${{ secrets.KEYCLOAK_USERNAME }}' \
+            -d 'password=${{ secrets.KEYCLOAK_PASSWORD }}')
+          
+          ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
+          
+          if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
+            echo "Failed to obtain access token"
+            echo "$TOKEN_RESPONSE"
+            exit 1
+          fi
+          
+          echo "access_token=$ACCESS_TOKEN" >> $GITHUB_ENV
+
+      - name: Prepare and Send for Code Fix
+        id: send_code_fix
+        run: |
+          RESPONSE=$(curl --location 'https://api.${{ vars.INSTANCE }}/ai/fix' \
+            --header "Authorization: Bearer ${{ env.access_token }}" \
+            --form 'RunName="code_reviewer"' \
+            --form 'SastName="${{ vars.SAST }}"' \
+            --form 'jobName="DemoCodeFixer"' \
+            --form 'SourceCodeLanguage="Java"' \
+            --form 'PromptId="CodeFixer__FixCode_V3"' \
+            --form 'TargetExtension="java"' \
+            --form 'Llm="${{ vars.LLM }}"' \
+            --form 'SearchPattern="*.java"' \
+            --form 'JobPreProcessors[]="VCS-CLONE-REPO"' \
+            --form 'JobPreProcessors[]="READ-CODE-CONVENTIONS"' \
+            --form 'JobPreProcessors[]="VCS-CHECKOUT-REPO"' \
+            --form 'ItemContentPostProcessors[]="WRITE-CONTENT"' \
+            --form 'ItemContentPostProcessors[]="COPY-CONTENT"' \
+            --form 'ItemContentPostProcessors[]="VCS-PULL-REQUEST-FILE-REPO"' \
+            --form 'JobPostProcessors[]="VCS-COMMIT-PUSH-REPO"' \
+            --form 'JobPostProcessors[]="VCS-PULL-REQUEST-REPO"' \
+            --form 'IssueSeverities[]="BLOCKER"' \
+            --form 'IssueSeverities[]="CRITICAL"' \
+            --form 'IssueSeverities[]="MAJOR"' \
+            --form 'SastIssueTypes[]="BUG"' \
+            --form 'SastIssueTypes[]="VULNERABILITY"' \
+            --form 'SastIssueTypes[]="CODE_SMELL"' \
+            --form 'Vcs[0][Name]="Codefixer"' \
+            --form 'BranchName="code-fixer"' \
+            --form 'BaseBranch="master"' \
+            --form 'RepoName="${{ github.repository }}"' \
+            --form 'CreatePullRequestPerFile="true"')
+          echo "API Response: $RESPONSE"
+          JOB_ID=$(echo $RESPONSE)
+          echo "job_id=$JOB_ID" >> $GITHUB_ENV
+
+      - name: Monitor Code Fix Job Status
+        id: monitor_code_fix_status
+        run: |
+          JOB_ID=${{ env.job_id }}
+          STATUS="Pending"
+          while [[ "$STATUS" != "Completed" ]]; do
+            RESPONSE=$(curl --location "https://api.${{ vars.INSTANCE }}/ai/jobs/$JOB_ID/status" \
+              --header "Authorization: Bearer ${{ env.access_token }}")
+            STATUS=$(echo $RESPONSE | jq -r '.status')
+            echo "Current status: $STATUS"
+            sleep 10
+          done
+          echo "Final status: $STATUS"
+          OUTPUT_URIS=$(echo $RESPONSE | jq -r '.results[].output[].uri')

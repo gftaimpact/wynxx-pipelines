@@ -1,0 +1,110 @@
+@startuml
+skinparam packageStyle rect
+
+' Actors
+:End User: as EndUser
+:System Administrator: as SysAdmin
+:API Client: as APIClient << system >>
+:Web Application: as WebApp << system >>
+:Authentication Service: as AuthService << system >>
+:User Management Service: as UserMgmtService << system >>
+:Database: as DB << system >>
+:System Shell: as SystemShell << system >>
+:Application Runtime Environment: as AppRuntime << system >>
+
+' System boundary
+package "Vulnado Application" {
+  ' Authentication subsystem
+  package "Authentication Subsystem" {
+    (Login) as UC1
+    (Register) as UC2
+    (Generate JWT Token) as UC3
+    (Validate Token) as UC5
+    (Retrieve User Information) as UC4
+    
+    UC1 ..> UC3 : <<include>>
+    UC5 <.. UC1 : <<extend>>
+    UC3 ..> UC4 : <<include>>
+    
+    note right of UC5
+      Validates JWT token against secret
+      Returns unauthorized if invalid
+    end note
+  }
+  
+  ' Comment management subsystem
+  package "Comment Management" {
+    (Create Comment) as UC6
+    (View Comments) as UC7
+    (Delete Comment) as UC8
+    
+    UC6 ..> UC5 : <<include>>
+    UC7 ..> UC5 : <<include>>
+    UC8 ..> UC5 : <<include>>
+  }
+  
+  ' Link extraction subsystem
+  package "Link Extraction" {
+    (Extract Links from URL) as UC9
+    
+    note bottom of UC9
+      Extracts all links from a given URL
+    end note
+  }
+  
+  ' Cowsay subsystem
+  package "Cowsay Functionality" {
+    (Generate Cowsay Message) as UC10
+    (Execute Shell Command) as UC11
+    
+    UC10 ..> UC11 : <<include>>
+    
+    note right of UC11
+      Potential security risk:
+      Executes shell commands
+    end note
+  }
+  
+  ' System management
+  package "System Management" {
+    (Initialize Database) as UC12
+    (Configure Application) as UC13
+    (Start Application) as UC14
+  }
+}
+
+' Actor relationships with use cases
+EndUser --> UC1
+EndUser --> UC2
+EndUser --> UC6
+EndUser --> UC7
+EndUser --> UC10
+
+SysAdmin --> UC8
+SysAdmin --> UC12
+SysAdmin --> UC13
+SysAdmin --> UC14
+
+APIClient --> UC6
+APIClient --> UC7
+APIClient --> UC9
+
+WebApp --> UC9
+WebApp --> UC10
+
+AuthService --> UC3
+AuthService --> UC5
+
+UserMgmtService --> UC4
+
+DB --> UC1
+DB --> UC2
+DB --> UC6
+DB --> UC7
+DB --> UC8
+DB --> UC12
+
+SystemShell --> UC11
+
+AppRuntime --> UC14
+@enduml

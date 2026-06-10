@@ -1,0 +1,21 @@
+@startuml
+actor Client
+participant CommentsController
+participant Comment
+
+note over Client, Comment: Create Comment
+
+Client -> CommentsController: POST request to /comments with comment data and x-auth-token header
+note right: Client submits new comment
+activate CommentsController
+
+CommentsController -> Comment: create(username, body)
+note right: Create new comment in database
+activate Comment
+Comment --> CommentsController: Newly created comment
+deactivate Comment
+
+CommentsController --> Client: Return created comment as JSON response
+note right: Send created comment to client
+deactivate CommentsController
+@enduml

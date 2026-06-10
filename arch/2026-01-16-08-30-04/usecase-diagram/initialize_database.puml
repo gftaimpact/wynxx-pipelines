@@ -1,0 +1,104 @@
+@startuml
+skinparam packageStyle rect
+skinparam actorStyle awesome
+
+' Actors
+:End User: as EndUser
+:System Administrator: as SysAdmin
+:API Client: as APIClient << system >>
+:Web Application: as WebApp << system >>
+:Authentication Service: as AuthService << system >>
+:User Management Service: as UserMgmtService << system >>
+:Database: as DB << system >>
+:System Shell: as SysShell << system >>
+:Application Runtime Environment: as AppRuntime << system >>
+
+' System boundary
+package "Vulnado Application" {
+  ' Authentication subsystem
+  package "Authentication Subsystem" {
+    usecase "Login" as UC1
+    usecase "Validate Token" as UC2
+    usecase "Retrieve User Information" as UC3
+  }
+  
+  ' Comment management subsystem
+  package "Comment Management Subsystem" {
+    usecase "Create Comment" as UC4
+    usecase "View Comments" as UC5
+    usecase "Delete Comment" as UC6
+  }
+  
+  ' Link extraction subsystem
+  package "Link Extraction Subsystem" {
+    usecase "Extract Links from URL" as UC7
+  }
+  
+  ' Cowsay subsystem
+  package "Cowsay Subsystem" {
+    usecase "Generate Cowsay Message" as UC8
+    usecase "Display Cowsay Message" as UC9
+  }
+  
+  ' Database management subsystem
+  package "Database Management Subsystem" {
+    usecase "Initialize Database" as UC10
+  }
+}
+
+' Relationships between actors and use cases
+EndUser --> UC1
+EndUser --> UC4
+EndUser --> UC5
+EndUser --> UC9
+
+SysAdmin --> UC10
+SysAdmin --> UC6
+
+APIClient --> UC4
+APIClient --> UC5
+APIClient --> UC7
+
+WebApp --> UC7
+WebApp --> UC9
+
+AuthService --> UC1
+AuthService --> UC2
+
+UserMgmtService --> UC3
+
+DB --> UC10
+DB --> UC4
+DB --> UC5
+DB --> UC6
+
+SysShell --> UC8
+
+AppRuntime ..> UC10 : <<supports>>
+
+' Include and extend relationships
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC9 ..> UC8 : <<include>>
+
+' Notes
+note right of UC10
+  Initializes database schema
+  and inserts seed data
+end note
+
+note right of UC7
+  Extracts links from provided
+  URLs or web pages
+end note
+
+note right of UC1
+  Authenticates users with
+  username and password
+end note
+
+note right of UC8
+  Executes system shell command
+  to generate ASCII art
+end note
+@enduml

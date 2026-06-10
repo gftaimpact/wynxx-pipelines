@@ -1,0 +1,108 @@
+{
+  "containers": [
+    {
+      "name": "Vulnado Web Application",
+      "technology": "Spring Boot",
+      "responsibility": "Provides REST endpoints for cowsay messages, user authentication, and comment management",
+      "components": [
+        "CowController",
+        "User",
+        "Comment",
+        "Cowsay",
+        "LinkLister"
+      ],
+      "relationships": []
+    },
+    {
+      "name": "PostgreSQL Database",
+      "technology": "PostgreSQL",
+      "responsibility": "Stores user data and comments",
+      "components": [],
+      "relationships": []
+    },
+    {
+      "name": "External Web Services",
+      "technology": "HTTP/HTTPS",
+      "responsibility": "External web pages that are scraped for links",
+      "components": [],
+      "relationships": []
+    },
+    {
+      "name": "Vulnado Web Application",
+      "technology": "Spring Boot",
+      "responsibility": "Provides user authentication, comment management, and link extraction functionality through REST APIs",
+      "components": [
+        "VulnadoApplication",
+        "LoginController",
+        "CommentsController",
+        "LinksController"
+      ],
+      "relationships": [
+        "PostgreSQL Database"
+      ]
+    },
+    {
+      "name": "PostgreSQL Database",
+      "technology": "PostgreSQL",
+      "responsibility": "Stores user credentials and comments data",
+      "components": [
+        "Postgres"
+      ],
+      "relationships": []
+    },
+    {
+      "name": "Web Client",
+      "technology": "Browser-based client",
+      "responsibility": "Consumes REST APIs provided by the Vulnado application",
+      "components": [],
+      "relationships": [
+        "Vulnado Web Application"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "source": "Vulnado Web Application",
+      "target": "PostgreSQL Database",
+      "type": "Uses",
+      "protocol": "JDBC"
+    },
+    {
+      "source": "Vulnado Web Application",
+      "target": "External Web Services",
+      "type": "Fetches data from",
+      "protocol": "HTTP/HTTPS"
+    },
+    {
+      "source": "Vulnado Web Application",
+      "target": "System Shell",
+      "type": "Executes",
+      "protocol": "Process execution"
+    },
+    {
+      "source": "Vulnado Web Application",
+      "target": "PostgreSQL Database",
+      "type": "Uses",
+      "protocol": "JDBC"
+    },
+    {
+      "source": "Web Client",
+      "target": "Vulnado Web Application",
+      "type": "Uses",
+      "protocol": "HTTP/REST"
+    }
+  ],
+  "technology": [
+    "Spring Boot",
+    "PostgreSQL",
+    "JDBC",
+    "JWT",
+    "JSoup",
+    "Java",
+    "Spring Boot",
+    "PostgreSQL",
+    "REST API",
+    "JDBC",
+    "Java"
+  ]
+}

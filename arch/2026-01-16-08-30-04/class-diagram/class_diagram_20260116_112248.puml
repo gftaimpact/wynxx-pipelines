@@ -1,0 +1,90 @@
+@startuml
+
+package "com.scalesec.vulnado" {
+    class LinkLister {
+        +{static} List<String> getLinks(String url)
+        +{static} List<String> getLinksV2(String url)
+    }
+
+    class CowController {
+        +String cowsay(String input)
+    }
+
+    class User {
+        +String id
+        +String username
+        +String hashedPassword
+        +User(String id, String username, String hashedPassword)
+        +String token(String secret)
+        +{static} void assertAuth(String secret, String token)
+        +{static} User fetch(String un)
+    }
+
+    class Cowsay {
+        +{static} String run(String input)
+    }
+
+    class Comment {
+        +String id
+        +String username
+        +String body
+        +Timestamp created_on
+        +Comment(String id, String username, String body, Timestamp created_on)
+        +{static} Comment create(String username, String body)
+        +{static} List<Comment> fetch_all()
+        +{static} Boolean delete(String id)
+        -Boolean commit()
+    }
+
+    class VulnadoApplication {
+        +{static} void main(String[] args)
+    }
+
+    class LoginController {
+        -String secret
+        +LoginResponse login(LoginRequest input)
+    }
+
+    class Postgres {
+        +{static} Connection connection()
+        +{static} void setup()
+        +{static} String md5(String input)
+        -{static} void insertUser(String username, String password)
+        -{static} void insertComment(String username, String body)
+    }
+
+    class LinksController {
+        +List<String> links(String url)
+        +List<String> linksV2(String url)
+    }
+
+    class CommentsController {
+        -String secret
+        +List<Comment> comments(String token)
+        +Comment createComment(String token, CommentRequest input)
+        +Boolean deleteComment(String token, String id)
+    }
+}
+
+' Relationships
+VulnadoApplication --|> Object
+CowController --> "1" Cowsay : uses
+User --> "1" Postgres : uses
+Comment --> "1" Postgres : uses
+VulnadoApplication --> "1" Postgres : uses
+LoginController --> "1" User : uses
+LoginController --> "1" Postgres : uses
+LinksController --> "1" LinkLister : uses
+CommentsController --> "1" Comment : uses
+CommentsController --> "1" User : uses
+
+note "Main application entry point" as N1
+N1 .. VulnadoApplication
+
+note "Handles database connections\nand provides utility methods" as N2
+N2 .. Postgres
+
+note "Authentication and user management" as N3
+N3 .. User
+
+@enduml

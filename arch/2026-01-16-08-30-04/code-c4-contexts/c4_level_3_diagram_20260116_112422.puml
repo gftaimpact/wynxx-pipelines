@@ -1,0 +1,53 @@
+@startuml
+plantuml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Component Diagram for Vulnado Application
+
+Container_Boundary(vulnado, "Vulnado Spring Boot Application") {
+    Component(vulnadoApp, "VulnadoApplication", "Spring Boot Application", "Main application entry point for the Vulnado Spring Boot application")
+    
+    Container_Boundary(controllers, "Controllers") {
+        Component(loginController, "LoginController", "Spring REST Controller", "Handles user authentication by validating credentials and issuing tokens")
+        Component(cowController, "CowController", "Spring REST Controller", "Provides a REST endpoint for generating cowsay messages")
+        Component(linksController, "LinksController", "Spring REST Controller", "Provides REST endpoints for retrieving links from URLs")
+        Component(commentsController, "CommentsController", "Spring REST Controller", "Manages comment-related HTTP endpoints for creating, retrieving, and deleting comments")
+    }
+    
+    Container_Boundary(services, "Services") {
+        Component(linkListerService, "LinkLister", "Java Service", "Extract and validate hyperlinks from web pages")
+        Component(cowsayService, "Cowsay", "Java Service", "Execute the cowsay command-line utility with user input and return the formatted output")
+    }
+    
+    Container_Boundary(models, "Domain Models") {
+        Component(userModel, "User", "Domain Model", "Represents user data and provides user-related operations")
+        Component(commentModel, "Comment", "Domain Model", "Represents comment data and provides comment-related operations")
+    }
+}
+
+System_Ext(cowsayTool, "External Cowsay Tool", "Command-line utility", "Formats text into ASCII art with cow character")
+System_Ext(jwtLib, "JWT Library", "io.jsonwebtoken", "Handles JWT token generation and validation")
+ContainerDb(postgres, "Postgres Database", "PostgreSQL", "Stores user and comment data")
+
+' Controller relationships
+Rel(loginController, userModel, "Uses", "Method call")
+Rel(cowController, cowsayService, "Uses", "Method call")
+Rel(linksController, linkListerService, "Uses", "Method call")
+Rel(commentsController, commentModel, "Uses", "Method call")
+Rel(commentsController, userModel, "Uses", "Method call")
+
+' Service relationships
+Rel(cowsayService, cowsayTool, "Executes", "System command")
+
+' Model relationships
+Rel(userModel, postgres, "Uses", "JDBC")
+Rel(commentModel, postgres, "Uses", "JDBC")
+Rel(userModel, jwtLib, "Uses", "Library dependency")
+
+' Application relationships
+Rel(vulnadoApp, postgres, "Uses", "Method call")
+
+@enduml

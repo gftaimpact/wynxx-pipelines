@@ -1,0 +1,252 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/LinksController.java",
+    "className": "LinksController",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Provides REST endpoints for retrieving links from URLs",
+    "interactions": [
+      "Calls LinkLister.getLinks() to extract links from a URL",
+      "Calls LinkLister.getLinksV2() for an improved version of link extraction"
+    ],
+    "businessKeywords": [
+      "links",
+      "URL",
+      "web scraping"
+    ],
+    "technicalCategory": "REST Controller",
+    "dataPatterns": [
+      "URL input parameter",
+      "List of strings as output"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "LinkLister",
+        "Spring Boot",
+        "Spring Web"
+      ],
+      "consumers": [
+        "Web clients accessing /links and /links-v2 endpoints"
+      ],
+      "providers": [
+        "LinkLister service"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Spring Boot web application",
+      "resourceRequirements": [
+        "JVM runtime",
+        "Network connectivity for URL access"
+      ],
+      "scalingNeeds": "Stateless design allows horizontal scaling"
+    },
+    "security": {
+      "dataClassification": "Public API endpoints",
+      "authenticationNeeds": "None specified in the code",
+      "authorizationPatterns": [
+        "No authorization controls visible"
+      ]
+    },
+    "performance": {
+      "criticalOperations": [
+        "URL processing",
+        "Link extraction"
+      ],
+      "dataVolume": "Dependent on target URL content size",
+      "concurrencyModel": "Spring's default request handling model"
+    }
+  },
+  "classDetails": {
+    "name": "LinksController",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [],
+    "methods": [
+      {
+        "name": "links",
+        "returnType": "List<String>",
+        "visibility": "public",
+        "parameters": [
+          {
+            "name": "url",
+            "type": "String",
+            "annotations": [
+              "@RequestParam"
+            ]
+          }
+        ],
+        "exceptions": [
+          "IOException"
+        ],
+        "annotations": [
+          "@RequestMapping(value = \"/links\", produces = \"application/json\")"
+        ]
+      },
+      {
+        "name": "linksV2",
+        "returnType": "List<String>",
+        "visibility": "public",
+        "parameters": [
+          {
+            "name": "url",
+            "type": "String",
+            "annotations": [
+              "@RequestParam"
+            ]
+          }
+        ],
+        "exceptions": [
+          "BadRequest"
+        ],
+        "annotations": [
+          "@RequestMapping(value = \"/links-v2\", produces = \"application/json\")"
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "type": "uses",
+        "target": "LinkLister",
+        "description": "Uses LinkLister to extract links from URLs"
+      }
+    ],
+    "interfaces": [],
+    "superclass": ""
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "URL Link Extraction Flow",
+        "steps": [
+          {
+            "actor": "Client",
+            "action": "Sends HTTP request to /links with URL parameter"
+          },
+          {
+            "actor": "LinksController",
+            "action": "Receives request and extracts URL parameter"
+          },
+          {
+            "actor": "LinksController",
+            "action": "Calls LinkLister.getLinks(url)"
+          },
+          {
+            "actor": "LinkLister",
+            "action": "Processes URL and extracts links"
+          },
+          {
+            "actor": "LinkLister",
+            "action": "Returns list of links to LinksController"
+          },
+          {
+            "actor": "LinksController",
+            "action": "Returns JSON response with links to client"
+          }
+        ],
+        "exceptionPaths": [
+          {
+            "exception": "IOException",
+            "handling": "Propagated to Spring's exception handler"
+          }
+        ]
+      },
+      {
+        "name": "URL Link Extraction V2 Flow",
+        "steps": [
+          {
+            "actor": "Client",
+            "action": "Sends HTTP request to /links-v2 with URL parameter"
+          },
+          {
+            "actor": "LinksController",
+            "action": "Receives request and extracts URL parameter"
+          },
+          {
+            "actor": "LinksController",
+            "action": "Calls LinkLister.getLinksV2(url)"
+          },
+          {
+            "actor": "LinkLister",
+            "action": "Processes URL and extracts links with improved method"
+          },
+          {
+            "actor": "LinkLister",
+            "action": "Returns list of links to LinksController"
+          },
+          {
+            "actor": "LinksController",
+            "action": "Returns JSON response with links to client"
+          }
+        ],
+        "exceptionPaths": [
+          {
+            "exception": "BadRequest",
+            "handling": "Propagated to Spring's exception handler"
+          }
+        ]
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      {
+        "name": "API Client",
+        "description": "Any client that consumes the links API endpoints"
+      }
+    ],
+    "mainScenarios": [
+      {
+        "name": "Extract Links from URL",
+        "actor": "API Client",
+        "preconditions": [
+          "Client has a valid URL to process",
+          "Target URL is accessible"
+        ],
+        "steps": [
+          "Client sends GET request to /links with URL parameter",
+          "System validates the URL parameter",
+          "System extracts links from the provided URL",
+          "System returns a JSON array of links found at the URL"
+        ],
+        "postconditions": [
+          "Client receives list of links from the target URL"
+        ],
+        "alternativeFlows": [
+          {
+            "condition": "URL is invalid or inaccessible",
+            "steps": [
+              "System throws IOException",
+              "Client receives error response"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Extract Links from URL (Version 2)",
+        "actor": "API Client",
+        "preconditions": [
+          "Client has a valid URL to process",
+          "Target URL is accessible"
+        ],
+        "steps": [
+          "Client sends GET request to /links-v2 with URL parameter",
+          "System validates the URL parameter",
+          "System extracts links from the provided URL using improved method",
+          "System returns a JSON array of links found at the URL"
+        ],
+        "postconditions": [
+          "Client receives list of links from the target URL"
+        ],
+        "alternativeFlows": [
+          {
+            "condition": "URL is invalid or request is malformed",
+            "steps": [
+              "System throws BadRequest exception",
+              "Client receives error response"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

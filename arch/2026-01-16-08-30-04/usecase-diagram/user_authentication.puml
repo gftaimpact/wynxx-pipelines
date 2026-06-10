@@ -1,0 +1,115 @@
+@startuml
+skinparam packageStyle rect
+skinparam actorStyle awesome
+
+' Actors
+:End User: as EndUser
+:System Administrator: as SysAdmin
+:API Client: as APIClient << system >>
+:Web Application: as WebApp << system >>
+:Authentication Service: as AuthService << system >>
+:User Management Service: as UserMgmtService << system >>
+:Database: as DB << system >>
+:System Shell: as SysShell << system >>
+:Application Runtime Environment: as AppRuntime << system >>
+
+' System boundary
+package "Vulnado Application" {
+  ' Authentication subsystem
+  package "Authentication Subsystem" {
+    usecase "Login" as UC_Login
+    usecase "Validate Token" as UC_ValidateToken
+    usecase "Retrieve User Information" as UC_RetrieveUser
+  }
+  
+  ' Comment management subsystem
+  package "Comment Management Subsystem" {
+    usecase "Create Comment" as UC_CreateComment
+    usecase "View Comments" as UC_ViewComments
+    usecase "Delete Comment" as UC_DeleteComment
+  }
+  
+  ' Link extraction subsystem
+  package "Link Extraction Subsystem" {
+    usecase "Extract Links from URL" as UC_ExtractLinks
+  }
+  
+  ' Cowsay subsystem
+  package "Cowsay Subsystem" {
+    usecase "Generate Cowsay Message" as UC_Cowsay
+  }
+  
+  ' System administration subsystem
+  package "System Administration Subsystem" {
+    usecase "Start Application" as UC_StartApp
+    usecase "Configure Application" as UC_ConfigApp
+    usecase "Initialize Database" as UC_InitDB
+  }
+}
+
+' Relationships between actors and use cases
+EndUser --> UC_Login
+EndUser --> UC_CreateComment
+EndUser --> UC_ViewComments
+EndUser --> UC_ExtractLinks
+EndUser --> UC_Cowsay
+
+SysAdmin --> UC_StartApp
+SysAdmin --> UC_ConfigApp
+SysAdmin --> UC_InitDB
+SysAdmin --> UC_DeleteComment
+
+APIClient --> UC_Login
+APIClient --> UC_CreateComment
+APIClient --> UC_ViewComments
+APIClient --> UC_ExtractLinks
+
+WebApp --> UC_ExtractLinks
+WebApp --> UC_Cowsay
+
+AuthService --> UC_Login
+AuthService --> UC_ValidateToken
+
+UserMgmtService --> UC_RetrieveUser
+
+DB <-- UC_Login : uses
+DB <-- UC_CreateComment : uses
+DB <-- UC_ViewComments : uses
+DB <-- UC_DeleteComment : uses
+DB <-- UC_InitDB : uses
+
+SysShell <-- UC_Cowsay : uses
+
+AppRuntime <-- UC_StartApp : uses
+AppRuntime <-- UC_ConfigApp : uses
+
+' Include and extend relationships
+UC_Login ..> UC_RetrieveUser : <<include>>
+UC_CreateComment ..> UC_ValidateToken : <<include>>
+UC_ViewComments ..> UC_ValidateToken : <<include>>
+UC_DeleteComment ..> UC_ValidateToken : <<include>>
+UC_ExtractLinks ..> UC_ValidateToken : <<include>>
+UC_Cowsay ..> UC_ValidateToken : <<include>>
+
+' Notes for important clarifications
+note bottom of UC_Login
+  Passwords stored as MD5 hashes
+  Authentication tokens generated using secret key
+  Error messages don't reveal specific failure reason
+end note
+
+note bottom of UC_Cowsay
+  Executes system shell commands
+  Potential security risk
+end note
+
+note right of UC_ExtractLinks
+  Processes external URLs
+  Potential for SSRF vulnerabilities
+end note
+
+note right of UC_InitDB
+  Creates initial database schema
+  Seeds with default admin user
+end note
+@enduml

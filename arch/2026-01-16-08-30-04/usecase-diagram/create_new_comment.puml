@@ -1,0 +1,113 @@
+@startuml
+skinparam packageStyle rect
+
+' Actors
+actor "End User" as end_user
+actor "System Administrator" as system_admin
+actor "API Client" as api_client #lightblue
+actor "Web Application" as web_application #lightblue
+actor "Authentication Service" as auth_service #lightblue
+actor "User Management Service" as user_mgmt_service #lightblue
+database "Database" as database
+actor "System Shell" as system_shell #lightblue
+actor "Application Runtime Environment" as app_runtime #lightblue
+
+' System boundary
+rectangle "Vulnado Application" {
+  ' Authentication subsystem
+  package "Authentication Subsystem" {
+    usecase "Login" as UC1
+    usecase "Validate Token" as UC2
+    usecase "Retrieve User Information" as UC3
+  }
+  
+  ' Comment management subsystem
+  package "Comment Management Subsystem" {
+    usecase "Create New Comment" as UC7
+    usecase "View Comments" as UC8
+    usecase "Delete Comment" as UC9
+  }
+  
+  ' Link extraction subsystem
+  package "Link Extraction Subsystem" {
+    usecase "Extract Links from URL" as UC4
+  }
+  
+  ' Cowsay subsystem
+  package "Cowsay Subsystem" {
+    usecase "Generate Cowsay Message" as UC5
+    usecase "Display Cowsay Message" as UC6
+  }
+  
+  ' System administration subsystem
+  package "System Administration Subsystem" {
+    usecase "Start Application" as UC10
+    usecase "Configure Application" as UC11
+    usecase "Initialize Database" as UC12
+  }
+}
+
+' Relationships between actors and use cases
+end_user --> UC1
+end_user --> UC7
+end_user --> UC8
+
+system_admin --> UC9
+system_admin --> UC10
+system_admin --> UC11
+system_admin --> UC12
+
+api_client --> UC4
+api_client --> UC7
+api_client --> UC8
+
+web_application --> UC4
+web_application --> UC6
+
+auth_service --> UC1
+auth_service --> UC2
+
+user_mgmt_service --> UC3
+
+database --> UC1 : <<support>>
+database --> UC7 : <<support>>
+database --> UC8 : <<support>>
+database --> UC9 : <<support>>
+database --> UC12 : <<support>>
+
+system_shell --> UC5 : <<support>>
+
+app_runtime --> UC10 : <<support>>
+
+' Include and extend relationships
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC7 ..> UC2 : <<include>>
+UC8 ..> UC2 : <<include>>
+UC9 ..> UC2 : <<include>>
+UC5 ..> UC6 : <<include>>
+
+' Notes
+note right of UC7
+  Create a new comment with:
+  - Username
+  - Comment body
+  - System-generated ID and timestamp
+end note
+
+note right of UC1
+  Authentication required for
+  most system operations
+end note
+
+note bottom of UC4
+  Extracts links from provided URLs
+  for further processing
+end note
+
+note bottom of UC5
+  Executes system shell command
+  to generate cowsay output
+end note
+
+@enduml

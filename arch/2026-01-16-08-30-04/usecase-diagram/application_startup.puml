@@ -1,0 +1,109 @@
+@startuml
+
+skinparam packageStyle rect
+skinparam actorStyle awesome
+
+' Actors
+:End User: as EndUser
+:System Administrator: as SysAdmin
+:API Client: as APIClient << system >>
+:Web Application: as WebApp << system >>
+:Authentication Service: as AuthService << system >>
+:User Management Service: as UserMgmtService << system >>
+:Database: as DB << system >>
+:System Shell: as SystemShell << system >>
+:Application Runtime Environment: as AppRuntime << system >>
+
+' System boundary
+rectangle "Vulnado Application" {
+  
+  ' Authentication subsystem
+  package "Authentication Subsystem" {
+    usecase "Login" as UC1
+    usecase "Validate Token" as UC2
+    usecase "Retrieve User Information" as UC3
+  }
+  
+  ' Comment Management subsystem
+  package "Comment Management Subsystem" {
+    usecase "Create Comment" as UC4
+    usecase "View Comments" as UC5
+    usecase "Delete Comment" as UC6
+  }
+  
+  ' Link Extraction subsystem
+  package "Link Extraction Subsystem" {
+    usecase "Extract Links from URL" as UC7
+  }
+  
+  ' Cowsay subsystem
+  package "Cowsay Subsystem" {
+    usecase "Generate Cowsay Message" as UC8
+  }
+  
+  ' Database Management subsystem
+  package "Database Management Subsystem" {
+    usecase "Initialize Database" as UC9
+    usecase "Store User Data" as UC10
+    usecase "Application Startup" as UC11
+  }
+}
+
+' Relationships between actors and use cases
+EndUser --> UC1
+EndUser --> UC4
+EndUser --> UC5
+EndUser --> UC8
+
+SysAdmin --> UC6
+SysAdmin --> UC9
+SysAdmin --> UC11
+
+APIClient --> UC4
+APIClient --> UC7
+
+WebApp --> UC7
+WebApp --> UC8
+
+AuthService --> UC1
+AuthService --> UC2
+
+UserMgmtService --> UC3
+
+DB --> UC9
+DB --> UC10
+
+SystemShell --> UC8
+
+AppRuntime --> UC11
+
+' Include and extend relationships
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC4 ..> UC2 : <<include>>
+UC6 ..> UC2 : <<include>>
+UC7 ..> UC2 : <<include>>
+UC8 ..> UC2 : <<include>>
+
+' Notes
+note right of UC11
+  Requires JVM and 
+  accessible database
+end note
+
+note bottom of UC8
+  Uses system shell to
+  execute cowsay command
+end note
+
+note right of UC7
+  Extracts links from
+  provided URLs
+end note
+
+note bottom of UC1
+  Authenticates users and
+  provides access token
+end note
+
+@enduml

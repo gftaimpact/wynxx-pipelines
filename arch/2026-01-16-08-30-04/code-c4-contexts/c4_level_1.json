@@ -1,0 +1,51 @@
+{
+  "system": {
+    "name": "Vulnado",
+    "description": "A Spring Boot web application that provides user authentication, comment management, and URL link extraction functionality",
+    "actors": [
+      {
+        "name": "User",
+        "description": "A user who authenticates and interacts with the system"
+      },
+      {
+        "name": "API Client",
+        "description": "External client that consumes the REST APIs"
+      }
+    ],
+    "softwareSystems": [
+      {
+        "name": "PostgreSQL Database",
+        "description": "Stores user credentials and comments data"
+      }
+    ],
+    "containers": [
+      {
+        "name": "Vulnado Application",
+        "description": "Spring Boot application providing authentication, comment management and link extraction services",
+        "technology": "Java, Spring Boot"
+      }
+    ],
+    "relationships": [
+      {
+        "source": "User",
+        "destination": "Vulnado Application",
+        "description": "Authenticates and manages comments"
+      },
+      {
+        "source": "API Client",
+        "destination": "Vulnado Application",
+        "description": "Makes API calls to extract links and manage comments"
+      },
+      {
+        "source": "Vulnado Application",
+        "destination": "PostgreSQL Database",
+        "description": "Reads from and writes to"
+      },
+      {
+        "source": "Vulnado Application",
+        "destination": "External Websites",
+        "description": "Extracts links from"
+      }
+    ]
+  }
+}

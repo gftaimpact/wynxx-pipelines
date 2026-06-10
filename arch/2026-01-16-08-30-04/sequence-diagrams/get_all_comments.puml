@@ -1,0 +1,25 @@
+@startuml
+actor Client
+participant CommentsController
+participant User
+participant Comment
+
+Client -> CommentsController: GET request to /comments with x-auth-token header
+note right: Client requests all comments
+
+CommentsController -> User: assertAuth(token, secret)
+note right: Validate authentication token
+
+alt Token is valid
+    CommentsController -> Comment: fetch_all()
+    note right: Retrieve all comments from database
+    Comment --> CommentsController: List<Comment>
+    CommentsController --> Client: Return comment list as JSON response
+    note right: Send comments to client
+else Token validation fails
+    User --> CommentsController: Authentication error
+    note right: Token validation failure
+    CommentsController --> Client: Return authentication error
+    note right: Authentication failure response (HTTP 401)
+end
+@enduml

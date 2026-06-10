@@ -1,0 +1,294 @@
+{
+  "c4Details": {
+    "path": "Work/f66f0d7d-9e45-422e-a8b7-2e63afb8aa53/input/src/main/java/com/scalesec/vulnado/User.java",
+    "className": "User",
+    "packageName": "com.scalesec.vulnado",
+    "responsibility": "Manages user authentication, token generation, and database operations for user data retrieval",
+    "interactions": [
+      "Interacts with database through Postgres connection",
+      "Generates and validates JWT tokens",
+      "Performs SQL queries to fetch user data"
+    ],
+    "businessKeywords": [
+      "authentication",
+      "user management",
+      "security",
+      "token-based authentication"
+    ],
+    "technicalCategory": "Authentication Component",
+    "dataPatterns": [
+      "User credentials storage",
+      "JWT token generation",
+      "SQL query execution"
+    ],
+    "componentRelationships": {
+      "dependencies": [
+        "io.jsonwebtoken.Jwts",
+        "io.jsonwebtoken.JwtParser",
+        "io.jsonwebtoken.SignatureAlgorithm",
+        "io.jsonwebtoken.security.Keys",
+        "javax.crypto.SecretKey",
+        "java.sql.Connection",
+        "java.sql.Statement",
+        "java.sql.ResultSet",
+        "com.scalesec.vulnado.Postgres",
+        "com.scalesec.vulnado.Unauthorized"
+      ],
+      "consumers": [
+        "Authentication services",
+        "User management services"
+      ],
+      "providers": [
+        "Database services",
+        "JWT token services"
+      ]
+    },
+    "infrastructure": {
+      "deploymentType": "Application component",
+      "resourceRequirements": [
+        "Database connection",
+        "JWT library"
+      ],
+      "scalingNeeds": "Stateless component that can be horizontally scaled"
+    },
+    "security": {
+      "dataClassification": "Sensitive - contains user credentials",
+      "authenticationNeeds": "JWT token-based authentication",
+      "authorizationPatterns": [
+        "Token validation"
+      ]
+    },
+    "performance": {
+      "criticalOperations": [
+        "Database queries",
+        "Token generation and validation"
+      ],
+      "dataVolume": "User records",
+      "concurrencyModel": "Synchronous operations"
+    }
+  },
+  "classDetails": {
+    "name": "User",
+    "package": "com.scalesec.vulnado",
+    "type": "class",
+    "visibility": "public",
+    "attributes": [
+      {
+        "name": "id",
+        "type": "String",
+        "visibility": "public",
+        "isStatic": false,
+        "isFinal": false
+      },
+      {
+        "name": "username",
+        "type": "String",
+        "visibility": "public",
+        "isStatic": false,
+        "isFinal": false
+      },
+      {
+        "name": "hashedPassword",
+        "type": "String",
+        "visibility": "public",
+        "isStatic": false,
+        "isFinal": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "User",
+        "returnType": "",
+        "visibility": "public",
+        "isStatic": false,
+        "isConstructor": true,
+        "parameters": [
+          {
+            "name": "id",
+            "type": "String"
+          },
+          {
+            "name": "username",
+            "type": "String"
+          },
+          {
+            "name": "hashedPassword",
+            "type": "String"
+          }
+        ],
+        "exceptions": []
+      },
+      {
+        "name": "token",
+        "returnType": "String",
+        "visibility": "public",
+        "isStatic": false,
+        "isConstructor": false,
+        "parameters": [
+          {
+            "name": "secret",
+            "type": "String"
+          }
+        ],
+        "exceptions": []
+      },
+      {
+        "name": "assertAuth",
+        "returnType": "void",
+        "visibility": "public",
+        "isStatic": true,
+        "isConstructor": false,
+        "parameters": [
+          {
+            "name": "secret",
+            "type": "String"
+          },
+          {
+            "name": "token",
+            "type": "String"
+          }
+        ],
+        "exceptions": [
+          "Unauthorized"
+        ]
+      },
+      {
+        "name": "fetch",
+        "returnType": "User",
+        "visibility": "public",
+        "isStatic": true,
+        "isConstructor": false,
+        "parameters": [
+          {
+            "name": "un",
+            "type": "String"
+          }
+        ],
+        "exceptions": []
+      }
+    ],
+    "relationships": [
+      {
+        "type": "uses",
+        "target": "Postgres",
+        "description": "Uses for database connection"
+      },
+      {
+        "type": "throws",
+        "target": "Unauthorized",
+        "description": "Throws when authentication fails"
+      }
+    ],
+    "interfaces": [],
+    "superclass": ""
+  },
+  "sequenceDetails": {
+    "flows": [
+      {
+        "name": "User Authentication Flow",
+        "steps": [
+          "Client provides username for fetch()",
+          "fetch() connects to database via Postgres.connection()",
+          "SQL query executed to retrieve user data",
+          "User object created with retrieved data",
+          "Connection closed",
+          "User object returned to caller"
+        ]
+      },
+      {
+        "name": "Token Generation Flow",
+        "steps": [
+          "Client calls token() with secret key",
+          "HMAC SHA key created from secret",
+          "JWT token built with username as subject",
+          "Token signed with key",
+          "Compact JWT string returned to caller"
+        ]
+      },
+      {
+        "name": "Token Validation Flow",
+        "steps": [
+          "Client calls assertAuth() with secret and token",
+          "HMAC SHA key created from secret",
+          "JWT parser initialized with signing key",
+          "Token parsed and validated",
+          "If validation fails, exception printed and Unauthorized exception thrown",
+          "If validation succeeds, method returns normally"
+        ]
+      }
+    ]
+  },
+  "useCaseDetails": {
+    "actors": [
+      {
+        "name": "Authentication Service",
+        "description": "Service that needs to authenticate users"
+      },
+      {
+        "name": "User Management Service",
+        "description": "Service that manages user data"
+      },
+      {
+        "name": "Database",
+        "description": "Stores user credentials and information"
+      }
+    ],
+    "mainScenarios": [
+      {
+        "name": "User Authentication",
+        "description": "Authenticate a user with username and password",
+        "preconditions": [
+          "User exists in the database"
+        ],
+        "steps": [
+          "Retrieve user by username using fetch()",
+          "Compare provided password with stored hashed password",
+          "Generate authentication token using token()"
+        ],
+        "postconditions": [
+          "User authenticated and token provided"
+        ],
+        "alternativeFlows": [
+          "User not found in database",
+          "Password does not match"
+        ]
+      },
+      {
+        "name": "Token Validation",
+        "description": "Validate a JWT token for authentication",
+        "preconditions": [
+          "Token has been previously issued"
+        ],
+        "steps": [
+          "Call assertAuth() with secret and token",
+          "Token is validated against the secret"
+        ],
+        "postconditions": [
+          "Token validated successfully"
+        ],
+        "alternativeFlows": [
+          "Token is invalid or expired, Unauthorized exception thrown"
+        ]
+      },
+      {
+        "name": "User Retrieval",
+        "description": "Retrieve user data from database",
+        "preconditions": [
+          "Database connection available"
+        ],
+        "steps": [
+          "Call fetch() with username",
+          "SQL query executed to find user",
+          "User object created from query results"
+        ],
+        "postconditions": [
+          "User data retrieved and returned as User object"
+        ],
+        "alternativeFlows": [
+          "User not found, null returned",
+          "Database error occurs, exception printed but null still returned"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,962 @@
+{
+  "scenarios": [
+    {
+      "name": "Application Startup",
+      "description": "The sequence of events that occur when the Vulnado application starts up",
+      "participants": [
+        {
+          "name": "JVM",
+          "type": "external_system",
+          "category": "runtime"
+        },
+        {
+          "name": "VulnadoApplication",
+          "type": "class",
+          "category": "application"
+        },
+        {
+          "name": "Postgres",
+          "type": "class",
+          "category": "database"
+        },
+        {
+          "name": "SpringApplication",
+          "type": "class",
+          "category": "framework"
+        }
+      ],
+      "interactions": [
+        {
+          "order": 1,
+          "from": "JVM",
+          "to": "VulnadoApplication",
+          "message": "main(args)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Entry point of the application",
+          "parameters": [
+            {
+              "name": "args",
+              "type": "String[]",
+              "value": "command line arguments"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 2,
+          "from": "VulnadoApplication",
+          "to": "Postgres",
+          "message": "setup()",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Initialize database schema and seed data",
+          "parameters": [],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 3,
+          "from": "Postgres",
+          "to": "Postgres",
+          "message": "connection()",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Establish database connection",
+          "parameters": [],
+          "returnValue": {
+            "type": "Connection",
+            "description": "JDBC connection object"
+          }
+        },
+        {
+          "order": 4,
+          "from": "Postgres",
+          "to": "Postgres",
+          "message": "insertUser(username, password)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Insert seed users into database",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "String",
+              "value": "seed username"
+            },
+            {
+              "name": "password",
+              "type": "String",
+              "value": "seed password"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 5,
+          "from": "Postgres",
+          "to": "Postgres",
+          "message": "insertComment(username, body)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Insert seed comments into database",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "String",
+              "value": "seed username"
+            },
+            {
+              "name": "body",
+              "type": "String",
+              "value": "seed comment body"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 6,
+          "from": "VulnadoApplication",
+          "to": "SpringApplication",
+          "message": "run(VulnadoApplication.class, args)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Start Spring Boot application",
+          "parameters": [
+            {
+              "name": "primarySource",
+              "type": "Class",
+              "value": "VulnadoApplication.class"
+            },
+            {
+              "name": "args",
+              "type": "String[]",
+              "value": "command line arguments"
+            }
+          ],
+          "returnValue": {
+            "type": "ConfigurableApplicationContext",
+            "description": "Spring application context"
+          }
+        },
+        {
+          "order": 7,
+          "from": "SpringApplication",
+          "to": "SpringApplication",
+          "message": "initialize application context",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Spring Boot initializes application context and beans",
+          "parameters": [],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "condition": "Database operations fail",
+          "interactions": [
+            {
+              "order": 1,
+              "from": "Postgres",
+              "to": "VulnadoApplication",
+              "message": "Print exception and exit application",
+              "type": "synchronous",
+              "condition": "Exception occurs during database setup",
+              "notes": "Application terminates on database setup failure",
+              "parameters": [],
+              "returnValue": {
+                "type": "void",
+                "description": ""
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authentication Flow",
+      "description": "User authentication process through the login endpoint",
+      "participants": [
+        {
+          "name": "Client",
+          "type": "actor",
+          "category": "external"
+        },
+        {
+          "name": "LoginController",
+          "type": "class",
+          "category": "controller"
+        },
+        {
+          "name": "User",
+          "type": "class",
+          "category": "model"
+        },
+        {
+          "name": "Postgres",
+          "type": "class",
+          "category": "database"
+        }
+      ],
+      "interactions": [
+        {
+          "order": 1,
+          "from": "Client",
+          "to": "LoginController",
+          "message": "POST /login with username and password",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Client initiates login request",
+          "parameters": [
+            {
+              "name": "LoginRequest",
+              "type": "JSON",
+              "value": "{username: string, password: string}"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 2,
+          "from": "LoginController",
+          "to": "User",
+          "message": "fetch(username)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Retrieve user by username",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "String",
+              "value": "username from request"
+            }
+          ],
+          "returnValue": {
+            "type": "User",
+            "description": "User object if found"
+          }
+        },
+        {
+          "order": 3,
+          "from": "LoginController",
+          "to": "Postgres",
+          "message": "md5(password)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Hash the provided password",
+          "parameters": [
+            {
+              "name": "password",
+              "type": "String",
+              "value": "password from request"
+            }
+          ],
+          "returnValue": {
+            "type": "String",
+            "description": "MD5 hash of password"
+          }
+        },
+        {
+          "order": 4,
+          "from": "LoginController",
+          "to": "LoginController",
+          "message": "Compare hashed password with stored hash",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Verify if passwords match",
+          "parameters": [],
+          "returnValue": {
+            "type": "boolean",
+            "description": "True if passwords match"
+          }
+        },
+        {
+          "order": 5,
+          "from": "LoginController",
+          "to": "User",
+          "message": "token(secret)",
+          "type": "synchronous",
+          "condition": "Passwords match",
+          "notes": "Generate authentication token",
+          "parameters": [
+            {
+              "name": "secret",
+              "type": "String",
+              "value": "Application secret key"
+            }
+          ],
+          "returnValue": {
+            "type": "String",
+            "description": "JWT token"
+          }
+        },
+        {
+          "order": 6,
+          "from": "LoginController",
+          "to": "Client",
+          "message": "Return LoginResponse with token",
+          "type": "return",
+          "condition": "Authentication successful",
+          "notes": "Send authentication token to client",
+          "parameters": [],
+          "returnValue": {
+            "type": "LoginResponse",
+            "description": "Response containing authentication token"
+          }
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "condition": "Password hash doesn't match",
+          "interactions": [
+            {
+              "order": 1,
+              "from": "LoginController",
+              "to": "Client",
+              "message": "Throw Unauthorized exception with 'Access Denied' message",
+              "type": "return",
+              "condition": "Passwords don't match",
+              "notes": "Authentication failure",
+              "parameters": [],
+              "returnValue": {
+                "type": "HTTP 401",
+                "description": "Unauthorized response"
+              }
+            }
+          ]
+        },
+        {
+          "condition": "User not found",
+          "interactions": [
+            {
+              "order": 1,
+              "from": "LoginController",
+              "to": "Client",
+              "message": "NullPointerException when trying to access user.hashedPassword",
+              "type": "return",
+              "condition": "User not found",
+              "notes": "Server error due to null user",
+              "parameters": [],
+              "returnValue": {
+                "type": "HTTP 500",
+                "description": "Server error response"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "URL Link Extraction Flow",
+      "description": "Process to extract links from a provided URL",
+      "participants": [
+        {
+          "name": "Client",
+          "type": "actor",
+          "category": "external"
+        },
+        {
+          "name": "LinksController",
+          "type": "class",
+          "category": "controller"
+        },
+        {
+          "name": "LinkLister",
+          "type": "class",
+          "category": "service"
+        }
+      ],
+      "interactions": [
+        {
+          "order": 1,
+          "from": "Client",
+          "to": "LinksController",
+          "message": "HTTP request to /links with URL parameter",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Client requests link extraction",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "String",
+              "value": "URL to extract links from"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 2,
+          "from": "LinksController",
+          "to": "LinkLister",
+          "message": "getLinks(url)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Extract links from the provided URL",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "String",
+              "value": "URL to extract links from"
+            }
+          ],
+          "returnValue": {
+            "type": "List<String>",
+            "description": "List of extracted links"
+          }
+        },
+        {
+          "order": 3,
+          "from": "LinksController",
+          "to": "Client",
+          "message": "Return JSON response with links",
+          "type": "return",
+          "condition": "",
+          "notes": "Send extracted links to client",
+          "parameters": [],
+          "returnValue": {
+            "type": "JSON",
+            "description": "JSON array of extracted links"
+          }
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "condition": "IOException occurs",
+          "interactions": [
+            {
+              "order": 1,
+              "from": "LinkLister",
+              "to": "LinksController",
+              "message": "Propagate IOException",
+              "type": "return",
+              "condition": "Error processing URL",
+              "notes": "Error handling for URL processing failures",
+              "parameters": [],
+              "returnValue": {
+                "type": "IOException",
+                "description": "Exception indicating URL processing failure"
+              }
+            },
+            {
+              "order": 2,
+              "from": "LinksController",
+              "to": "Client",
+              "message": "Spring's exception handler processes IOException",
+              "type": "return",
+              "condition": "",
+              "notes": "Spring converts exception to HTTP error response",
+              "parameters": [],
+              "returnValue": {
+                "type": "HTTP Error",
+                "description": "Error response to client"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "URL Link Extraction V2 Flow",
+      "description": "Improved process to extract links from a provided URL",
+      "participants": [
+        {
+          "name": "Client",
+          "type": "actor",
+          "category": "external"
+        },
+        {
+          "name": "LinksController",
+          "type": "class",
+          "category": "controller"
+        },
+        {
+          "name": "LinkLister",
+          "type": "class",
+          "category": "service"
+        }
+      ],
+      "interactions": [
+        {
+          "order": 1,
+          "from": "Client",
+          "to": "LinksController",
+          "message": "HTTP request to /links-v2 with URL parameter",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Client requests improved link extraction",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "String",
+              "value": "URL to extract links from"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 2,
+          "from": "LinksController",
+          "to": "LinkLister",
+          "message": "getLinksV2(url)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Extract links using improved method",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "String",
+              "value": "URL to extract links from"
+            }
+          ],
+          "returnValue": {
+            "type": "List<String>",
+            "description": "List of extracted links"
+          }
+        },
+        {
+          "order": 3,
+          "from": "LinksController",
+          "to": "Client",
+          "message": "Return JSON response with links",
+          "type": "return",
+          "condition": "",
+          "notes": "Send extracted links to client",
+          "parameters": [],
+          "returnValue": {
+            "type": "JSON",
+            "description": "JSON array of extracted links"
+          }
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "condition": "BadRequest occurs",
+          "interactions": [
+            {
+              "order": 1,
+              "from": "LinkLister",
+              "to": "LinksController",
+              "message": "Propagate BadRequest exception",
+              "type": "return",
+              "condition": "Invalid URL or request",
+              "notes": "Error handling for invalid requests",
+              "parameters": [],
+              "returnValue": {
+                "type": "BadRequest",
+                "description": "Exception indicating invalid request"
+              }
+            },
+            {
+              "order": 2,
+              "from": "LinksController",
+              "to": "Client",
+              "message": "Spring's exception handler processes BadRequest",
+              "type": "return",
+              "condition": "",
+              "notes": "Spring converts exception to HTTP error response",
+              "parameters": [],
+              "returnValue": {
+                "type": "HTTP 400",
+                "description": "Bad Request response to client"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Get All Comments",
+      "description": "Retrieve all comments from the system",
+      "participants": [
+        {
+          "name": "Client",
+          "type": "actor",
+          "category": "external"
+        },
+        {
+          "name": "CommentsController",
+          "type": "class",
+          "category": "controller"
+        },
+        {
+          "name": "User",
+          "type": "class",
+          "category": "model"
+        },
+        {
+          "name": "Comment",
+          "type": "class",
+          "category": "model"
+        }
+      ],
+      "interactions": [
+        {
+          "order": 1,
+          "from": "Client",
+          "to": "CommentsController",
+          "message": "GET request to /comments with x-auth-token header",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Client requests all comments",
+          "parameters": [
+            {
+              "name": "x-auth-token",
+              "type": "String",
+              "value": "Authentication token"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 2,
+          "from": "CommentsController",
+          "to": "User",
+          "message": "assertAuth(token, secret)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Validate authentication token",
+          "parameters": [
+            {
+              "name": "token",
+              "type": "String",
+              "value": "Authentication token from header"
+            },
+            {
+              "name": "secret",
+              "type": "String",
+              "value": "Application secret key"
+            }
+          ],
+          "returnValue": {
+            "type": "boolean",
+            "description": "True if token is valid"
+          }
+        },
+        {
+          "order": 3,
+          "from": "CommentsController",
+          "to": "Comment",
+          "message": "fetch_all()",
+          "type": "synchronous",
+          "condition": "Token is valid",
+          "notes": "Retrieve all comments from database",
+          "parameters": [],
+          "returnValue": {
+            "type": "List<Comment>",
+            "description": "List of all comments"
+          }
+        },
+        {
+          "order": 4,
+          "from": "CommentsController",
+          "to": "Client",
+          "message": "Return comment list as JSON response",
+          "type": "return",
+          "condition": "",
+          "notes": "Send comments to client",
+          "parameters": [],
+          "returnValue": {
+            "type": "JSON",
+            "description": "JSON array of comments"
+          }
+        }
+      ],
+      "alternativeFlows": [
+        {
+          "condition": "Token validation fails",
+          "interactions": [
+            {
+              "order": 1,
+              "from": "User",
+              "to": "CommentsController",
+              "message": "Authentication error",
+              "type": "return",
+              "condition": "Invalid token",
+              "notes": "Token validation failure",
+              "parameters": [],
+              "returnValue": {
+                "type": "AuthenticationException",
+                "description": "Exception indicating authentication failure"
+              }
+            },
+            {
+              "order": 2,
+              "from": "CommentsController",
+              "to": "Client",
+              "message": "Return authentication error",
+              "type": "return",
+              "condition": "",
+              "notes": "Authentication failure response",
+              "parameters": [],
+              "returnValue": {
+                "type": "HTTP 401",
+                "description": "Unauthorized response"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Create Comment",
+      "description": "Create a new comment in the system",
+      "participants": [
+        {
+          "name": "Client",
+          "type": "actor",
+          "category": "external"
+        },
+        {
+          "name": "CommentsController",
+          "type": "class",
+          "category": "controller"
+        },
+        {
+          "name": "Comment",
+          "type": "class",
+          "category": "model"
+        }
+      ],
+      "interactions": [
+        {
+          "order": 1,
+          "from": "Client",
+          "to": "CommentsController",
+          "message": "POST request to /comments with comment data and x-auth-token header",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Client submits new comment",
+          "parameters": [
+            {
+              "name": "x-auth-token",
+              "type": "String",
+              "value": "Authentication token"
+            },
+            {
+              "name": "comment",
+              "type": "JSON",
+              "value": "{username: string, body: string}"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 2,
+          "from": "CommentsController",
+          "to": "Comment",
+          "message": "create(username, body)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Create new comment in database",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "String",
+              "value": "Username from request"
+            },
+            {
+              "name": "body",
+              "type": "String",
+              "value": "Comment body from request"
+            }
+          ],
+          "returnValue": {
+            "type": "Comment",
+            "description": "Newly created comment"
+          }
+        },
+        {
+          "order": 3,
+          "from": "CommentsController",
+          "to": "Client",
+          "message": "Return created comment as JSON response",
+          "type": "return",
+          "condition": "",
+          "notes": "Send created comment to client",
+          "parameters": [],
+          "returnValue": {
+            "type": "JSON",
+            "description": "JSON representation of created comment"
+          }
+        }
+      ],
+      "alternativeFlows": []
+    },
+    {
+      "name": "Delete Comment",
+      "description": "Delete a comment from the system",
+      "participants": [
+        {
+          "name": "Client",
+          "type": "actor",
+          "category": "external"
+        },
+        {
+          "name": "CommentsController",
+          "type": "class",
+          "category": "controller"
+        },
+        {
+          "name": "Comment",
+          "type": "class",
+          "category": "model"
+        }
+      ],
+      "interactions": [
+        {
+          "order": 1,
+          "from": "Client",
+          "to": "CommentsController",
+          "message": "DELETE request to /comments/{id} with x-auth-token header",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Client requests comment deletion",
+          "parameters": [
+            {
+              "name": "id",
+              "type": "String",
+              "value": "Comment ID to delete"
+            },
+            {
+              "name": "x-auth-token",
+              "type": "String",
+              "value": "Authentication token"
+            }
+          ],
+          "returnValue": {
+            "type": "void",
+            "description": ""
+          }
+        },
+        {
+          "order": 2,
+          "from": "CommentsController",
+          "to": "Comment",
+          "message": "delete(id)",
+          "type": "synchronous",
+          "condition": "",
+          "notes": "Delete comment from database",
+          "parameters": [
+            {
+              "name": "id",
+              "type": "String",
+              "value": "Comment ID to delete"
+            }
+          ],
+          "returnValue": {
+            "type": "boolean",
+            "description": "True if deletion successful"
+          }
+        },
+        {
+          "order": 3,
+          "from": "CommentsController",
+          "to": "Client",
+          "message": "Return boolean result as JSON response",
+          "type": "return",
+          "condition": "",
+          "notes": "Send deletion result to client",
+          "parameters": [],
+          "returnValue": {
+            "type": "JSON",
+            "description": "JSON with deletion result"
+          }
+        }
+      ],
+      "alternativeFlows": []
+    }
+  ],
+  "systemBoundaries": [
+    {
+      "name": "Vulnado Application",
+      "participants": [
+        "VulnadoApplication",
+        "LoginController",
+        "LinksController",
+        "CommentsController",
+        "User",
+        "Comment",
+        "LinkLister"
+      ]
+    },
+    {
+      "name": "Database Layer",
+      "participants": [
+        "Postgres"
+      ]
+    },
+    {
+      "name": "External Systems",
+      "participants": [
+        "Client",
+        "JVM",
+        "SpringApplication"
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "attachedTo": "Postgres.md5",
+      "content": "Using MD5 for password hashing is insecure and should be replaced with a more secure algorithm like bcrypt or Argon2",
+      "type": "technical_detail"
+    },
+    {
+      "attachedTo": "User.assertAuth",
+      "content": "Token validation should include expiration checking and proper signature verification",
+      "type": "constraint"
+    },
+    {
+      "attachedTo": "LinkLister.getLinks",
+      "content": "This method may be vulnerable to SSRF (Server-Side Request Forgery) attacks if it doesn't validate the URL properly",
+      "type": "comment"
+    },
+    {
+      "attachedTo": "CommentsController.createComment",
+      "content": "No input validation is performed on comment body, potentially allowing XSS attacks",
+      "type": "comment"
+    }
+  ],
+  "metadata": {
+    "mainScenarios": [
+      "Authentication Flow",
+      "Get All Comments",
+      "URL Link Extraction Flow"
+    ],
+    "criticalPaths": [
+      "Authentication Flow",
+      "Application Startup"
+    ],
+    "performanceCriticalInteractions": [
+      "Postgres.setup()",
+      "LinkLister.getLinks(url)"
+    ]
+  }
+}

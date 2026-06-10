@@ -1,0 +1,1013 @@
+Project Path: vulnado
+
+Source Tree:
+
+```txt
+vulnado
+└── src
+    ├── main
+    │   └── java
+    │       └── com
+    │           └── scalesec
+    │               └── vulnado
+    │                   ├── Comment.java
+    │                   ├── CommentsController.java
+    │                   ├── CowController.java
+    │                   ├── Cowsay.java
+    │                   ├── LinkLister.java
+    │                   ├── LinksController.java
+    │                   ├── LoginController.java
+    │                   ├── Postgres.java
+    │                   ├── User.java
+    │                   └── VulnadoApplication.java
+    └── test
+        └── java
+            └── com
+                └── scalesec
+                    └── vulnado
+                        ├── UserTest.java
+                        ├── UserTests.java
+                        └── VulnadoApplicationTests.java
+
+```
+
+`src/main/java/com/scalesec/vulnado/Comment.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.apache.catalina.Server;
+import java.sql.*;
+import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.UUID;
+
+public class Comment {
+  public String id, username, body;
+  public Timestamp created_on;
+
+  public Comment(String id, String username, String body, Timestamp created_on) {
+    this.id = id;
+    this.username = username;
+    this.body = body;
+    this.created_on = created_on;
+  }
+
+  public static Comment create(String username, String body){
+    long time = new Date().getTime();
+    Timestamp timestamp = new Timestamp(time);
+    Comment comment = new Comment(UUID.randomUUID().toString(), username, body, timestamp);
+    try {
+      if (comment.commit()) {
+        return comment;
+      } else {
+        throw new BadRequest("Unable to save comment");
+      }
+    } catch (Exception e) {
+      throw new ServerError(e.getMessage());
+    }
+  }
+
+  public static List<Comment> fetch_all() {
+    Statement stmt = null;
+    List<Comment> comments = new ArrayList();
+    try {
+      Connection cxn = Postgres.connection();
+      stmt = cxn.createStatement();
+
+      String query = "select * from comments;";
+      ResultSet rs = stmt.executeQuery(query);
+      while (rs.next()) {
+        String id = rs.getString("id");
+        String username = rs.getString("username");
+        String body = rs.getString("body");
+        Timestamp created_on = rs.getTimestamp("created_on");
+        Comment c = new Comment(id, username, body, created_on);
+        comments.add(c);
+      }
+      cxn.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.println(e.getClass().getName()+": "+e.getMessage());
+    } finally {
+      return comments;
+    }
+  }
+
+  public static Boolean delete(String id) {
+    try {
+      String sql = "DELETE FROM comments where id = ?";
+      Connection con = Postgres.connection();
+      PreparedStatement pStatement = con.prepareStatement(sql);
+      pStatement.setString(1, id);
+      return 1 == pStatement.executeUpdate();
+    } catch(Exception e) {
+      e.printStackTrace();
+    } finally {
+      return false;
+    }
+  }
+
+  private Boolean commit() throws SQLException {
+    String sql = "INSERT INTO comments (id, username, body, created_on) VALUES (?,?,?,?)";
+    Connection con = Postgres.connection();
+    PreparedStatement pStatement = con.prepareStatement(sql);
+    pStatement.setString(1, this.id);
+    pStatement.setString(2, this.username);
+    pStatement.setString(3, this.body);
+    pStatement.setTimestamp(4, this.created_on);
+    return 1 == pStatement.executeUpdate();
+  }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/CommentsController.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.boot.autoconfigure.*;
+import java.util.List;
+import java.io.Serializable;
+
+@RestController
+@EnableAutoConfiguration
+public class CommentsController {
+  @Value("${app.secret}")
+  private String secret;
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/comments", method = RequestMethod.GET, produces = "application/json")
+  List<Comment> comments(@RequestHeader(value="x-auth-token") String token) {
+    User.assertAuth(secret, token);
+    return Comment.fetch_all();
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/comments", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
+  Comment createComment(@RequestHeader(value="x-auth-token") String token, @RequestBody CommentRequest input) {
+    return Comment.create(input.username, input.body);
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/comments/{id}", method = RequestMethod.DELETE, produces = "application/json")
+  Boolean deleteComment(@RequestHeader(value="x-auth-token") String token, @PathVariable("id") String id) {
+    return Comment.delete(id);
+  }
+}
+
+class CommentRequest implements Serializable {
+  public String username;
+  public String body;
+}
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+class BadRequest extends RuntimeException {
+  public BadRequest(String exception) {
+    super(exception);
+  }
+}
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class ServerError extends RuntimeException {
+  public ServerError(String exception) {
+    super(exception);
+  }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/CowController.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.springframework.web.bind.annotation.*;
+import org.springframework.boot.autoconfigure.*;
+
+import java.io.Serializable;
+
+@RestController
+@EnableAutoConfiguration
+public class CowController {
+    @RequestMapping(value = "/cowsay")
+    String cowsay(@RequestParam(defaultValue = "I love Linux!") String input) {
+        return Cowsay.run(input);
+    }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/Cowsay.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+public class Cowsay {
+  public static String run(String input) {
+    ProcessBuilder processBuilder = new ProcessBuilder();
+    String cmd = "/usr/games/cowsay '" + input + "'";
+    System.out.println(cmd);
+    processBuilder.command("bash", "-c", cmd);
+
+    StringBuilder output = new StringBuilder();
+
+    try {
+      Process process = processBuilder.start();
+      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+      String line;
+      while ((line = reader.readLine()) != null) {
+        output.append(line + "\n");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return output.toString();
+  }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/LinkLister.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.IOException;
+import java.net.*;
+
+
+public class LinkLister {
+  public static List<String> getLinks(String url) throws IOException {
+    List<String> result = new ArrayList<String>();
+    Document doc = Jsoup.connect(url).get();
+    Elements links = doc.select("a");
+    for (Element link : links) {
+      result.add(link.absUrl("href"));
+    }
+    return result;
+  }
+
+  public static List<String> getLinksV2(String url) throws BadRequest {
+    try {
+      URL aUrl= new URL(url);
+      String host = aUrl.getHost();
+      System.out.println(host);
+      if (host.startsWith("172.") || host.startsWith("192.168") || host.startsWith("10.")){
+        throw new BadRequest("Use of Private IP");
+      } else {
+        return getLinks(url);
+      }
+    } catch(Exception e) {
+      throw new BadRequest(e.getMessage());
+    }
+  }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/LinksController.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.springframework.boot.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.boot.autoconfigure.*;
+import java.util.List;
+import java.io.Serializable;
+import java.io.IOException;
+
+
+@RestController
+@EnableAutoConfiguration
+public class LinksController {
+  @RequestMapping(value = "/links", produces = "application/json")
+  List<String> links(@RequestParam String url) throws IOException{
+    return LinkLister.getLinks(url);
+  }
+  @RequestMapping(value = "/links-v2", produces = "application/json")
+  List<String> linksV2(@RequestParam String url) throws BadRequest{
+    return LinkLister.getLinksV2(url);
+  }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/LoginController.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.springframework.boot.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.boot.autoconfigure.*;
+import org.springframework.stereotype.*;
+import org.springframework.beans.factory.annotation.*;
+import java.io.Serializable;
+
+@RestController
+@EnableAutoConfiguration
+public class LoginController {
+  @Value("${app.secret}")
+  private String secret;
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/login", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
+  LoginResponse login(@RequestBody LoginRequest input) {
+    User user = User.fetch(input.username);
+    if (Postgres.md5(input.password).equals(user.hashedPassword)) {
+      return new LoginResponse(user.token(secret));
+    } else {
+      throw new Unauthorized("Access Denied");
+    }
+  }
+}
+
+class LoginRequest implements Serializable {
+  public String username;
+  public String password;
+}
+
+class LoginResponse implements Serializable {
+  public String token;
+  public LoginResponse(String msg) { this.token = msg; }
+}
+
+@ResponseStatus(HttpStatus.UNAUTHORIZED)
+class Unauthorized extends RuntimeException {
+  public Unauthorized(String exception) {
+    super(exception);
+  }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/Postgres.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.UUID;
+
+public class Postgres {
+
+    public static Connection connection() {
+        try {
+            Class.forName("org.postgresql.Driver");
+            String url = new StringBuilder()
+                    .append("jdbc:postgresql://")
+                    .append(System.getenv("PGHOST"))
+                    .append("/")
+                    .append(System.getenv("PGDATABASE")).toString();
+            return DriverManager.getConnection(url,
+                    System.getenv("PGUSER"), System.getenv("PGPASSWORD"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.getClass().getName()+": "+e.getMessage());
+            System.exit(1);
+        }
+        return null;
+    }
+    public static void setup(){
+        try {
+            System.out.println("Setting up Database...");
+            Connection c = connection();
+            Statement stmt = c.createStatement();
+
+            // Create Schema
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS users(user_id VARCHAR (36) PRIMARY KEY, username VARCHAR (50) UNIQUE NOT NULL, password VARCHAR (50) NOT NULL, created_on TIMESTAMP NOT NULL, last_login TIMESTAMP)");
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS comments(id VARCHAR (36) PRIMARY KEY, username VARCHAR (36), body VARCHAR (500), created_on TIMESTAMP NOT NULL)");
+
+            // Clean up any existing data
+            stmt.executeUpdate("DELETE FROM users");
+            stmt.executeUpdate("DELETE FROM comments");
+
+            // Insert seed data
+            insertUser("admin", "!!SuperSecretAdmin!!");
+            insertUser("alice", "AlicePassword!");
+            insertUser("bob", "BobPassword!");
+            insertUser("eve", "$EVELknev^l");
+            insertUser("rick", "!GetSchwifty!");
+
+            insertComment("rick", "cool dog m8");
+            insertComment("alice", "OMG so cute!");
+            c.close();
+        } catch (Exception e) {
+            System.out.println(e);
+            System.exit(1);
+        }
+    }
+
+    // Java program to calculate MD5 hash value
+    public static String md5(String input)
+    {
+        try {
+
+            // Static getInstance method is called with hashing MD5
+            MessageDigest md = MessageDigest.getInstance("MD5");
+
+            // digest() method is called to calculate message digest
+            //  of an input digest() return array of byte
+            byte[] messageDigest = md.digest(input.getBytes());
+
+            // Convert byte array into signum representation
+            BigInteger no = new BigInteger(1, messageDigest);
+
+            // Convert message digest into hex value
+            String hashtext = no.toString(16);
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+            return hashtext;
+        }
+
+        // For specifying wrong message digest algorithms
+        catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void insertUser(String username, String password) {
+       String sql = "INSERT INTO users (user_id, username, password, created_on) VALUES (?, ?, ?, current_timestamp)";
+       PreparedStatement pStatement = null;
+       try {
+          pStatement = connection().prepareStatement(sql);
+          pStatement.setString(1, UUID.randomUUID().toString());
+          pStatement.setString(2, username);
+          pStatement.setString(3, md5(password));
+          pStatement.executeUpdate();
+       } catch(Exception e) {
+         e.printStackTrace();
+       }
+    }
+
+    private static void insertComment(String username, String body) {
+        String sql = "INSERT INTO comments (id, username, body, created_on) VALUES (?, ?, ?, current_timestamp)";
+        PreparedStatement pStatement = null;
+        try {
+            pStatement = connection().prepareStatement(sql);
+            pStatement.setString(1, UUID.randomUUID().toString());
+            pStatement.setString(2, username);
+            pStatement.setString(3, body);
+            pStatement.executeUpdate();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/User.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.ResultSet;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+
+public class User {
+  public String id, username, hashedPassword;
+
+  public User(String id, String username, String hashedPassword) {
+    this.id = id;
+    this.username = username;
+    this.hashedPassword = hashedPassword;
+  }
+
+  public String token(String secret) {
+    SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+    String jws = Jwts.builder().setSubject(this.username).signWith(key).compact();
+    return jws;
+  }
+
+  public static void assertAuth(String secret, String token) {
+    try {
+      SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+      Jwts.parser()
+        .setSigningKey(key)
+        .parseClaimsJws(token);
+    } catch(Exception e) {
+      e.printStackTrace();
+      throw new Unauthorized(e.getMessage());
+    }
+  }
+
+  public static User fetch(String un) {
+    Statement stmt = null;
+    User user = null;
+    try {
+      Connection cxn = Postgres.connection();
+      stmt = cxn.createStatement();
+      System.out.println("Opened database successfully");
+
+      String query = "select * from users where username = '" + un + "' limit 1";
+      System.out.println(query);
+      ResultSet rs = stmt.executeQuery(query);
+      if (rs.next()) {
+        String user_id = rs.getString("user_id");
+        String username = rs.getString("username");
+        String password = rs.getString("password");
+        user = new User(user_id, username, password);
+      }
+      cxn.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.println(e.getClass().getName()+": "+e.getMessage());
+    } finally {
+      return user;
+    }
+  }
+}
+
+```
+
+`src/main/java/com/scalesec/vulnado/VulnadoApplication.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
+
+@ServletComponentScan
+@SpringBootApplication
+public class VulnadoApplication {
+	public static void main(String[] args) {
+		Postgres.setup();
+		SpringApplication.run(VulnadoApplication.class, args);
+	}
+}
+```
+
+`src/test/java/com/scalesec/vulnado/UserTest.java`:
+
+```java
+import com.scalesec.vulnado.User;
+import com.scalesec.vulnado.Postgres;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.mockito.Mockito;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.SQLException;
+import javax.crypto.SecretKey;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import static org.mockito.Mockito.*;
+
+public class UserTest {
+
+    private static final String SECRET_KEY = "mySecretKeymySecretKeymySecretKeymySecretKey"; // 32 bytes key
+
+    @BeforeAll
+    public static void setupDatabase() {
+        Postgres.setup();
+    }
+
+    @BeforeEach
+    public void setup() {
+        // Setup code before each test if needed
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Cleanup code after each test if needed
+    }
+
+    @AfterAll
+    public static void cleanupDatabase() {
+        // Cleanup database if needed
+    }
+
+    // Test for User constructor
+    @Test
+    public void constructor_ShouldInitializeFields() {
+        User user = new User("1", "testUser", "hashedPassword");
+        Assertions.assertEquals("1", user.id, "User ID should be initialized correctly");
+        Assertions.assertEquals("testUser", user.username, "Username should be initialized correctly");
+        Assertions.assertEquals("hashedPassword", user.hashedPassword, "Hashed password should be initialized correctly");
+    }
+
+    // Test for token method
+    @Test
+    public void token_ShouldReturnValidToken() {
+        User user = new User("1", "testUser", "hashedPassword");
+        String token = user.token(SECRET_KEY);
+        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        String subject = Jwts.parser().setSigningKey(key).parseClaimsJws(token).getBody().getSubject();
+        Assertions.assertEquals("testUser", subject, "Token should contain the correct username");
+    }
+
+    // Test for assertAuth method
+    @Test
+    public void assertAuth_ShouldNotThrowExceptionForValidToken() {
+        User user = new User("1", "testUser", "hashedPassword");
+        String token = user.token(SECRET_KEY);
+        Assertions.assertDoesNotThrow(() -> User.assertAuth(SECRET_KEY, token), "Valid token should not throw exception");
+    }
+
+    @Test
+    public void assertAuth_ShouldThrowExceptionForInvalidToken() {
+        String invalidToken = "invalidToken";
+        Exception exception = Assertions.assertThrows(Exception.class, () -> User.assertAuth(SECRET_KEY, invalidToken), "Invalid token should throw exception");
+        Assertions.assertTrue(exception.getMessage().contains("JWT"), "Exception message should contain 'JWT'");
+    }
+
+    // Test for fetch method
+    @Test
+    public void fetch_ShouldReturnUserForValidUsername() throws SQLException {
+        Connection mockConnection = mock(Connection.class);
+        Statement mockStatement = mock(Statement.class);
+        ResultSet mockResultSet = mock(ResultSet.class);
+
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true);
+        when(mockResultSet.getString("user_id")).thenReturn("1");
+        when(mockResultSet.getString("username")).thenReturn("testUser");
+        when(mockResultSet.getString("password")).thenReturn("hashedPassword");
+
+        Mockito.mockStatic(Postgres.class);
+        when(Postgres.connection()).thenReturn(mockConnection);
+
+        User user = User.fetch("testUser");
+        Assertions.assertNotNull(user, "User should not be null for valid username");
+        Assertions.assertEquals("1", user.id, "User ID should match");
+        Assertions.assertEquals("testUser", user.username, "Username should match");
+        Assertions.assertEquals("hashedPassword", user.hashedPassword, "Hashed password should match");
+
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    public void fetch_ShouldReturnNullForInvalidUsername() throws SQLException {
+        Connection mockConnection = mock(Connection.class);
+        Statement mockStatement = mock(Statement.class);
+        ResultSet mockResultSet = mock(ResultSet.class);
+
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+
+        Mockito.mockStatic(Postgres.class);
+        when(Postgres.connection()).thenReturn(mockConnection);
+
+        User user = User.fetch("invalidUser");
+        Assertions.assertNull(user, "User should be null for invalid username");
+
+        Mockito.clearAllCaches();
+    }
+}
+
+```
+
+`src/test/java/com/scalesec/vulnado/UserTests.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+class UserTest {
+
+    @Mock
+    private Connection mockConnection;
+    @Mock
+    private Statement mockStatement;
+    @Mock
+    private ResultSet mockResultSet;
+
+    private User testUser;
+    private static final String TEST_SECRET = "testSecretKeyForJWTTesting";
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        testUser = new User("1", "testUser", "hashedPassword");
+    }
+
+    @Test
+    void token_ShouldGenerateValidJWT() {
+        String token = testUser.token(TEST_SECRET);
+        assertNotNull(token, "Generated token should not be null");
+        assertTrue(token.split("\\.").length == 3, "Token should have three parts separated by dots");
+    }
+
+    @Test
+    void assertAuth_WithValidToken_ShouldNotThrowException() {
+        String token = testUser.token(TEST_SECRET);
+        assertDoesNotThrow(() -> User.assertAuth(TEST_SECRET, token), "assertAuth should not throw exception for valid token");
+    }
+
+    @Test
+    void assertAuth_WithInvalidToken_ShouldThrowUnauthorized() {
+        String invalidToken = "invalidToken";
+        assertThrows(Unauthorized.class, () -> User.assertAuth(TEST_SECRET, invalidToken), "assertAuth should throw Unauthorized for invalid token");
+    }
+
+    @Test
+    void fetch_WithExistingUser_ShouldReturnUser() throws Exception {
+        String username = "existingUser";
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true);
+        when(mockResultSet.getString("user_id")).thenReturn("1");
+        when(mockResultSet.getString("username")).thenReturn(username);
+        when(mockResultSet.getString("password")).thenReturn("hashedPassword");
+
+        User result = User.fetch(username);
+
+        assertNotNull(result, "Fetch should return a user for existing username");
+        assertEquals(username, result.username, "Fetched user should have correct username");
+    }
+
+    @Test
+    void fetch_WithNonExistingUser_ShouldReturnNull() throws Exception {
+        String username = "nonExistingUser";
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+
+        User result = User.fetch(username);
+
+        assertNull(result, "Fetch should return null for non-existing username");
+    }
+
+    @Test
+    void fetch_WithDatabaseException_ShouldReturnNull() throws Exception {
+        String username = "exceptionUser";
+        when(Postgres.connection()).thenThrow(new RuntimeException("Database connection failed"));
+
+        User result = User.fetch(username);
+
+        assertNull(result, "Fetch should return null when database exception occurs");
+    }
+
+    @Test
+    void token_ShouldGenerateUniqueTokensForDifferentUsers() {
+        User user1 = new User("1", "user1", "password1");
+        User user2 = new User("2", "user2", "password2");
+
+        String token1 = user1.token(TEST_SECRET);
+        String token2 = user2.token(TEST_SECRET);
+
+        assertNotEquals(token1, token2, "Tokens for different users should be unique");
+    }
+
+    @Test
+    void assertAuth_WithModifiedToken_ShouldThrowUnauthorized() {
+        String token = testUser.token(TEST_SECRET);
+        String modifiedToken = token.substring(0, token.length() - 1) + "X"; // Modify the last character
+
+        assertThrows(Unauthorized.class, () -> User.assertAuth(TEST_SECRET, modifiedToken), "assertAuth should throw Unauthorized for modified token");
+    }
+
+    @Test
+    void fetch_ShouldExecuteCorrectSQLQuery() throws Exception {
+        String username = "testUser";
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+
+        User.fetch(username);
+
+        verify(mockStatement).executeQuery("select * from users where username = '" + username + "' limit 1");
+    }
+
+    @Test
+    void fetch_ShouldCloseConnectionAfterExecution() throws Exception {
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+
+        User.fetch("testUser");
+
+        verify(mockConnection).close();
+    }
+
+    @Test
+    void fetch_ShouldHandleSQLInjectionAttempt() throws Exception {
+        String maliciousUsername = "user' OR '1'='1";
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+
+        User result = User.fetch(maliciousUsername);
+
+        assertNull(result, "Fetch should return null for SQL injection attempt");
+        verify(mockStatement).executeQuery("select * from users where username = '" + maliciousUsername + "' limit 1");
+    }
+
+    @Test
+    void assertAuth_WithExpiredToken_ShouldThrowUnauthorized() {
+        // This test assumes that the token implementation includes an expiration time
+        String expiredToken = Jwts.builder()
+                .setSubject(testUser.username)
+                .setExpiration(new java.util.Date(System.currentTimeMillis() - 1000)) // Set expiration to 1 second ago
+                .signWith(Keys.hmacShaKeyFor(TEST_SECRET.getBytes()))
+                .compact();
+
+        assertThrows(Unauthorized.class, () -> User.assertAuth(TEST_SECRET, expiredToken), "assertAuth should throw Unauthorized for expired token");
+    }
+
+    @Test
+    void fetch_ShouldPrintQueryToConsole() throws Exception {
+        String username = "testUser";
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
+
+        User.fetch(username);
+
+        String expectedQuery = "select * from users where username = '" + username + "' limit 1";
+        assertTrue(outContent.toString().contains(expectedQuery), "Fetch should print the executed query to console");
+
+        System.setOut(System.out);
+    }
+
+    @Test
+    void fetch_ShouldPrintDatabaseOpenMessage() throws Exception {
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
+
+        User.fetch("testUser");
+
+        assertTrue(outContent.toString().contains("Opened database successfully"), "Fetch should print 'Opened database successfully' message");
+
+        System.setOut(System.out);
+    }
+
+    @Test
+    void fetch_ShouldHandleExceptionAndPrintErrorMessage() throws Exception {
+        String username = "exceptionUser";
+        RuntimeException testException = new RuntimeException("Test database exception");
+        when(Postgres.connection()).thenThrow(testException);
+
+        ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(errContent));
+
+        User result = User.fetch(username);
+
+        assertNull(result, "Fetch should return null when an exception occurs");
+        assertTrue(errContent.toString().contains("Test database exception"), "Fetch should print the exception message to stderr");
+
+        System.setErr(System.err);
+    }
+
+    @Test
+    void fetch_ShouldReturnNullWhenResultSetIsEmpty() throws Exception {
+        String username = "nonExistentUser";
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+
+        User result = User.fetch(username);
+
+        assertNull(result, "Fetch should return null when the ResultSet is empty");
+    }
+
+    @Test
+    void assertAuth_ShouldPrintStackTraceOnException() {
+        String invalidToken = "invalidToken";
+        ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(errContent));
+
+        assertThrows(Unauthorized.class, () -> User.assertAuth(TEST_SECRET, invalidToken));
+
+        assertTrue(errContent.toString().contains("Stack trace:"), "assertAuth should print stack trace on exception");
+
+        System.setErr(System.err);
+    }
+
+    @Test
+    void token_ShouldContainCorrectUsername() {
+        String token = testUser.token(TEST_SECRET);
+        SecretKey key = Keys.hmacShaKeyFor(TEST_SECRET.getBytes());
+        String subject = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
+        assertEquals(testUser.username, subject, "Token should contain the correct username");
+    }
+
+    @Test
+    void fetch_ShouldHandleMultipleResultsAndReturnFirstOne() throws Exception {
+        String username = "duplicateUser";
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, true, false);
+        when(mockResultSet.getString("user_id")).thenReturn("1", "2");
+        when(mockResultSet.getString("username")).thenReturn(username, username);
+        when(mockResultSet.getString("password")).thenReturn("password1", "password2");
+
+        User result = User.fetch(username);
+
+        assertNotNull(result, "Fetch should return a user when multiple results exist");
+        assertEquals("1", result.id, "Fetch should return the first user when multiple results exist");
+    }
+
+    @Test
+    void fetch_ShouldTrimWhitespaceFromUsername() throws Exception {
+        String username = "  whitespaceUser  ";
+        String trimmedUsername = "whitespaceUser";
+        when(Postgres.connection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true);
+        when(mockResultSet.getString("user_id")).thenReturn("1");
+        when(mockResultSet.getString("username")).thenReturn(trimmedUsername);
+        when(mockResultSet.getString("password")).thenReturn("password");
+
+        User result = User.fetch(username);
+
+        assertNotNull(result, "Fetch should return a user for username with whitespace");
+        assertEquals(trimmedUsername, result.username, "Fetched user should have trimmed username");
+        verify(mockStatement).executeQuery(contains("'" + trimmedUsername + "'"));
+    }
+}
+
+```
+
+`src/test/java/com/scalesec/vulnado/VulnadoApplicationTests.java`:
+
+```java
+package com.scalesec.vulnado;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class VulnadoApplicationTests {
+
+	@Test
+	public void contextLoads() {
+	}
+
+}
+
+
+```

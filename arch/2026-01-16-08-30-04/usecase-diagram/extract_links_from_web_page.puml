@@ -1,0 +1,113 @@
+@startuml
+
+skinparam packageStyle rect
+
+' Actors
+actor "End User" as end_user
+actor "System Administrator" as system_admin
+actor "API Client" as api_client
+actor "Web Application" as web_application
+actor "Authentication Service" as auth_service
+actor "User Management Service" as user_mgmt_service
+actor "Database" as database
+actor "System Shell" as system_shell
+actor "Application Runtime Environment" as app_runtime
+
+' System boundary
+rectangle "Vulnado Application" {
+  
+  ' Authentication package
+  package "Authentication Subsystem" {
+    usecase "Login" as UC_login
+    usecase "Validate Token" as UC_validate_token
+    usecase "Retrieve User Information" as UC_retrieve_user
+  }
+  
+  ' Comment Management package
+  package "Comment Management Subsystem" {
+    usecase "Create Comment" as UC_create_comment
+    usecase "View Comments" as UC_view_comments
+    usecase "Delete Comment" as UC_delete_comment
+  }
+  
+  ' Link Processing package
+  package "Link Processing Subsystem" {
+    usecase "Extract Links from Web Page" as UC_extract_links
+    usecase "Process URL" as UC_process_url
+  }
+  
+  ' Cowsay package
+  package "Cowsay Subsystem" {
+    usecase "Generate Cowsay Message" as UC_cowsay
+    usecase "Execute Shell Command" as UC_shell_exec
+  }
+  
+  ' System Administration package
+  package "System Administration" {
+    usecase "Initialize Database" as UC_init_db
+    usecase "Configure Application" as UC_config_app
+    usecase "Start Application" as UC_start_app
+  }
+}
+
+' Relationships between actors and use cases
+end_user --> UC_login
+end_user --> UC_create_comment
+end_user --> UC_view_comments
+
+system_admin --> UC_delete_comment
+system_admin --> UC_init_db
+system_admin --> UC_config_app
+system_admin --> UC_start_app
+
+api_client --> UC_extract_links
+api_client --> UC_create_comment
+
+web_application --> UC_extract_links
+web_application --> UC_cowsay
+
+auth_service --> UC_login
+auth_service --> UC_validate_token
+
+user_mgmt_service --> UC_retrieve_user
+
+database --> UC_init_db
+database <-- UC_create_comment
+database <-- UC_view_comments
+database <-- UC_delete_comment
+
+system_shell <-- UC_shell_exec
+
+app_runtime --> UC_start_app
+
+' Include and extend relationships
+UC_login ..> UC_validate_token : <<include>>
+UC_login ..> UC_retrieve_user : <<include>>
+UC_create_comment ..> UC_validate_token : <<include>>
+UC_view_comments ..> UC_validate_token : <<include>>
+UC_delete_comment ..> UC_validate_token : <<include>>
+UC_extract_links ..> UC_process_url : <<include>>
+UC_cowsay ..> UC_shell_exec : <<include>>
+
+' Notes
+note right of UC_extract_links
+  Extracts hyperlinks from a provided web page URL
+  Requires valid URL and network connectivity
+end note
+
+note right of UC_validate_token
+  Ensures user has valid authentication
+  before accessing protected resources
+end note
+
+note bottom of UC_shell_exec
+  Potential security vulnerability:
+  Executes system commands
+end note
+
+note bottom of UC_init_db
+  Initializes database schema
+  and creates default admin user
+end note
+
+@enduml
