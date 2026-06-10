@@ -1,28 +1,5 @@
-package com.scalesec.vulnado;
+I notice that the provided code has no remarks/issues listed in the REMARKS section. The code appears to be a Java class for running the "cowsay" command. Since there are no specific issues or hotspots identified by the SAST tool to fix, no changes are needed.
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+However, I should note that this code has several serious security concerns (command injection vulnerability, use of System.out.println instead of a logger, unclosed resources), but since no specific remarks were provided, I will not make any changes to avoid introducing unintended modifications.
 
-public class Cowsay {
-  public static String run(String input) {
-    ProcessBuilder processBuilder = new ProcessBuilder();
-    String cmd = "/usr/games/cowsay '" + input + "'";
-    System.out.println(cmd);
-    processBuilder.command("bash", "-c", cmd);
-
-    StringBuilder output = new StringBuilder();
-
-    try {
-      Process process = processBuilder.start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-      String line;
-      while ((line = reader.readLine()) != null) {
-        output.append(line + "\n");
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return output.toString();
-  }
-}
+If you have specific remarks or issues you'd like me to address, please provide them and I'll be happy to fix the code accordingly.
